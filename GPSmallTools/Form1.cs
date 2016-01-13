@@ -17,12 +17,21 @@ namespace GPSmallTools
 {
     public partial class Form1 : Form
     {
+        //https://www.showapi.com/api/lookPoint/131/45
+        //http://www.21andy.com/new/20090530/1313.html
+        //https://api.wmcloud.com/docs/pages/viewpage.action?pageId=1867781
+        //http://tushare.org/datayes.html#id2
         public Form1()
         {
             InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
+        {
+            Show();
+        }
+
+        public void Show()
         {
             List<APIStock> listStock = new List<APIStock>();
             List<APIMarket> listMarket = new List<APIMarket>();
@@ -53,25 +62,30 @@ namespace GPSmallTools
                         {
                             APIStock stock = new APIStock();
                             JObject jStock = (JObject)jContent["stockinfo"][i];
-                            stock.name = Convert.ToString(jStock["name"]);
-                            stock.code = Convert.ToString(jStock["code"]);
-                            stock.date = Convert.ToString(jStock["date"]) + " " + Convert.ToString(jStock["time"]);
-                            stock.openningPrice = Convert.ToString(jStock["openningPrice"]);
+                            stock.name = Convert.ToString(jStock["name"]).Trim('"');
+                            stock.code = Convert.ToString(jStock["code"]).Trim('"'); ;
+                            stock.date = jStock["date"].ToString();//Convert.ToString(jStock["date"].ToString() + " " + jStock["time"].ToString());
+                            stock.openningPrice = Convert.ToString(jStock["OpenningPrice"]);
                             stock.closingPrice = Convert.ToString(jStock["closingPrice"]);
                             stock.hPrice = Convert.ToString(jStock["hPrice"]);
                             stock.lPrice = Convert.ToString(jStock["lPrice"]);
                             stock.currentPrice = Convert.ToString(jStock["currentPrice"]);
-                            stock.growth = Convert.ToString(jStock["growth"]);
-                            stock.growthPercent = Convert.ToString(jStock["growthPercent"]);
-                            stock.dealnumber = Convert.ToString(jStock["dealnumber"]);
-                            stock.turnover = Convert.ToString(jStock["turnover"]);
-                            stock.hPrice52 = Convert.ToString(jStock["52hPrice"]);
-                            stock.lPrice52 = Convert.ToString(jStock["52lPrice"]);
+                            //stock.growth = Convert.ToString(jStock["growth"]);
+                            //stock.growthPercent = Convert.ToString(jStock["growthPercent"]);
+                            //stock.dealnumber = Convert.ToString(jStock["dealnumber"]);
+                            stock.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jStock["turnover"].ToString())/100000000, 2, MidpointRounding.AwayFromZero));
+                            //stock.hPrice52 = Convert.ToString(jStock["52hPrice"]);
+                            //stock.lPrice52 = Convert.ToString(jStock["52lPrice"]);
+
+                            stock.competitivePrice = Convert.ToString(jStock["competitivePrice"]);
+                            stock.auctionPrice = Convert.ToString(jStock["auctionPrice"]);
+                            stock.totalNumber = Convert.ToString(Math.Round(Convert.ToDouble(jStock["totalNumber"].ToString())/1000000, 2, MidpointRounding.AwayFromZero));
+                            stock.increase = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));
                             listStock.Add(stock);
                         }
                         JObject jMarket = (JObject)jContent["market"];
                         APIMarket mSH = new APIMarket();
-                        mSH.name = Convert.ToString(jMarket["shanghai"]["name"]);
+                        mSH.name = jMarket["shanghai"]["name"].ToString().Trim('"');
                         mSH.curdot = Convert.ToString(jMarket["shanghai"]["curdot"]);
                         mSH.curprice = Convert.ToString(jMarket["shanghai"]["curprice"]);
                         mSH.rate = Convert.ToString(jMarket["shanghai"]["rate"]);
@@ -103,7 +117,149 @@ namespace GPSmallTools
                 MessageBox.Show("返回数据空");
                 return;
             }
+            dataGridView1.Columns.Clear();
+            //dataGridView1.Columns[4].DataPropertyName
+            DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
+            col1.HeaderText = "股票名称";
+            col1.DataPropertyName = "name";
+            col1.Name = "name";
+            col1.Width = 80;
+            col1.ReadOnly = true;
+            dataGridView1.Columns.Insert(0, col1); 
+            DataGridViewTextBoxColumn col3 = new DataGridViewTextBoxColumn();
+            col3.HeaderText = "当前价";
+            col3.DataPropertyName = "currentPrice";
+            col3.Name = "currentPrice";
+            col3.Width = 70;
+            col3.ReadOnly = true;
+            dataGridView1.Columns.Insert(1, col3);
+            DataGridViewTextBoxColumn col18 = new DataGridViewTextBoxColumn();
+            col18.HeaderText = "涨幅(%)";
+            col18.DataPropertyName = "increase";
+            col18.Name = "increase";
+            col18.Width = 75;
+            col18.ReadOnly = true;
+            dataGridView1.Columns.Insert(2, col18);
+            DataGridViewTextBoxColumn col2 = new DataGridViewTextBoxColumn();
+            col2.HeaderText = "股票代码";
+            col2.DataPropertyName = "code";
+            col2.Name = "code";
+            col2.Width = 80;
+            col2.ReadOnly = true;
+            dataGridView1.Columns.Insert(3, col2);
+            DataGridViewTextBoxColumn col6 = new DataGridViewTextBoxColumn();
+            col6.HeaderText = "今日最高价";
+            col6.DataPropertyName = "hPrice";
+            col6.Name = "hPrice";
+            col6.Width = 90;
+            col6.ReadOnly = true;
+            dataGridView1.Columns.Insert(4, col6);
+            DataGridViewTextBoxColumn col7 = new DataGridViewTextBoxColumn();
+            col7.HeaderText = "今日最低价";
+            col7.DataPropertyName = "lPrice";
+            col7.Name = "lPrice";
+            col7.Width = 90;
+            col7.ReadOnly = true;
+            dataGridView1.Columns.Insert(5, col7);
+            DataGridViewTextBoxColumn col8 = new DataGridViewTextBoxColumn();
+            col8.HeaderText = "开盘价";
+            col8.DataPropertyName = "openningPrice";
+            col8.Name = "openningPrice";
+            col8.Width = 70;
+            col8.ReadOnly = true;
+            dataGridView1.Columns.Insert(6, col8);
+            DataGridViewTextBoxColumn col9 = new DataGridViewTextBoxColumn();
+            col9.HeaderText = "昨日收盘价";
+            col9.DataPropertyName = "closingPrice";
+            col9.Name = "closingPrice";
+            col9.Width = 90;
+            col9.ReadOnly = true;
+            dataGridView1.Columns.Insert(7, col9);
+            DataGridViewTextBoxColumn col17 = new DataGridViewTextBoxColumn();
+            col17.HeaderText = "成交量(万)";
+            col17.DataPropertyName = "totalNumber";
+            col17.Name = "totalNumber";
+            col17.Width = 90;
+            col17.ReadOnly = true;
+            dataGridView1.Columns.Insert(8, col17);
+            DataGridViewTextBoxColumn col13 = new DataGridViewTextBoxColumn();
+            col13.HeaderText = "成交金额(亿)";
+            col13.DataPropertyName = "turnover";
+            col13.Name = "turnover";
+            col13.Width = 100;
+            col13.ReadOnly = true;
+            dataGridView1.Columns.Insert(9, col13);
+            DataGridViewTextBoxColumn col14 = new DataGridViewTextBoxColumn();
+            col14.HeaderText = "刷新日期";
+            col14.DataPropertyName = "date";
+            col14.Name = "date";
+            col14.Width = 90;
+            col14.ReadOnly = true;
+            dataGridView1.Columns.Insert(10, col14);
+
+            //DataGridViewTextBoxColumn col4 = new DataGridViewTextBoxColumn();
+            //col4.HeaderText = "涨幅比例";
+            //col4.DataPropertyName = "growthPercent";
+            //col4.Name = "growthPercent";
+            //col4.Width = 100;
+            //col4.ReadOnly = true;
+            //dataGridView1.Columns.Add(col4);
+            //DataGridViewTextBoxColumn col5 = new DataGridViewTextBoxColumn();
+            //col5.HeaderText = "价格涨幅";
+            //col5.DataPropertyName = "growth";
+            //col5.Name = "growth";
+            //col5.Width = 100;
+            //col5.ReadOnly = true;
+            //dataGridView1.Columns.Add(col5);
+            
+            
+            //DataGridViewTextBoxColumn col10 = new DataGridViewTextBoxColumn();
+            //col10.HeaderText = "52周最高价";
+            //col10.DataPropertyName = "hPrice52";
+            //col10.Name = "hPrice52";
+            //col10.Width = 100;
+            //col10.ReadOnly = true;
+            //dataGridView1.Columns.Add(col10);
+            //DataGridViewTextBoxColumn col11 = new DataGridViewTextBoxColumn();
+            //col11.HeaderText = "52周最低价";
+            //col11.DataPropertyName = "lPrice52";
+            //col11.Name = "lPrice52";
+            //col11.Width = 100;
+            //col11.ReadOnly = true;
+            //dataGridView1.Columns.Add(col11);
+            //DataGridViewTextBoxColumn col12 = new DataGridViewTextBoxColumn();
+            //col12.HeaderText = "成交量股";
+            //col12.DataPropertyName = "dealnumber";
+            //col12.Name = "dealnumber";
+            //col12.Width = 100;
+            //col12.ReadOnly = true;
+            //dataGridView1.Columns.Add(col12);
+
+            //DataGridViewTextBoxColumn col15 = new DataGridViewTextBoxColumn();
+            //col15.HeaderText = "未知competitivePrice";
+            //col15.DataPropertyName = "competitivePrice";
+            //col15.Name = "competitivePrice";
+            //col15.Width = 100;
+            //col15.ReadOnly = true;
+            //dataGridView1.Columns.Add(col15);
+            //DataGridViewTextBoxColumn col16 = new DataGridViewTextBoxColumn();
+            //col16.HeaderText = "未知auctionPrice";
+            //col16.DataPropertyName = "auctionPrice";
+            //col16.Name = "auctionPrice";
+            //col16.Width = 100;
+            //col16.ReadOnly = true;
+            //dataGridView1.Columns.Add(col16);
+
+            //dataGridView1.AllowUserToAddRows = false;
+            //dataGridView1.AllowUserToOrderColumns = true;        //允许用户调整列的位置
+            //dataGridView1.Columns[0].Visible = false; 
+            //dataGridView1.ColumnHeadersVisible = false; // 列头隐藏 
+            //dataGridView1.RowHeadersVisible = false; // 行头隐藏
+            dataGridView1.ReadOnly = true;
+            dataGridView1.AutoGenerateColumns = false;
             dataGridView1.DataSource = listStock;
+            
+            //http://wsh1798.iteye.com/blog/601592
         }
 
         //接口请求数据
@@ -200,6 +356,44 @@ namespace GPSmallTools
             }
         }
         #endregion
+
+        //刷新
+        private void btnSelect_Click(object sender, EventArgs e)
+        {
+            Show();
+        }
+
+        //左右扩展
+        private void btnRight_Click(object sender, EventArgs e)
+        {
+            if (btnRight.Text.Trim() == "》")
+            {
+                this.Width = 919;
+                dataGridView1.Width = 893;
+                btnRight.Text = "《";
+            }
+            else
+            {
+                this.Width = 280;
+                dataGridView1.Width = 270;
+                btnRight.Text = "》";
+            }
+        }
+
+        //上下扩展
+        private void btnDown_Click(object sender, EventArgs e)
+        {
+            if (btnDown.Text.Trim() == "︾")
+            {
+                this.Height = 630;
+                btnDown.Text = "︽";
+            }
+            else
+            {
+                this.Height = 355;
+                btnDown.Text = "︾";
+            }
+        }
         
     }
 
@@ -210,49 +404,49 @@ namespace GPSmallTools
         {
         }
 
-        public string name;//股票名称
-        public string code;//股票代码
+        public string name { get; set; }//股票名称
+        public object code { get; set; }//股票代码
         public string date;//日期
-        public string openningPrice;//开盘价
-        public string closingPrice;//昨日收盘价
-        public string hPrice;//今日最高价
-        public string lPrice;//今日最低价
-        public string currentPrice;//当前价
-        public string growth;//价格涨幅
-        public string growthPercent; //价格涨幅比例，单位%
-        public string dealnumber;//成交量股
-        public string turnover;//成交金额，单位港币
-        public string hPrice52;//52周最高价
-        public string lPrice52;//52周最低价
+        public string openningPrice { get; set; }//开盘价
+        public string closingPrice{ get; set; }//昨日收盘价
+        public string hPrice{ get; set; }//今日最高价
+        public string lPrice{ get; set; }//今日最低价
+        public string currentPrice{ get; set; }//当前价
+        //public string growth{ get; set; }//价格涨幅
+        //public string growthPercent{ get; set; } //价格涨幅比例，单位%
+        //public string dealnumber{ get; set; }//成交量股
+        public string turnover{ get; set; }//成交金额，单位港币
+        //public string hPrice52{ get; set; }//52周最高价
+        //public string lPrice52{ get; set; }//52周最低价
 
-        public string competitivePrice;
-        public string auctionPrice;
-        public string totalNumber;
-        public string increase;
-        public string buyOne;
-        public string buyOnePrice;
-        public string buyTwo;
-        public string buyTwoPrice;
-        public string buyThree;
-        public string buyThreePrice;
-        public string buyFour;
-        public string buyFourPrice;
-        public string buyFive;
-        public string buyFivePrice;
-        public string sellOne;
-        public string sellOnePrice;
-        public string sellTwo;
-        public string sellTwoPrice;
-        public string sellThree;
-        public string sellThreePrice;
-        public string sellFour;
-        public string sellFourPrice;
-        public string sellFive;
-        public string sellFivePrice;
-        public string minurl;
-        public string dayurl;
-        public string weekurl;
-        public string monthurl;
+        public string competitivePrice{ get; set; }//竞价
+        public string auctionPrice{ get; set; }//拍卖价
+        public string totalNumber{ get; set; }//成交量
+        public string increase { get; set; }//价格涨幅比例，单位%
+        public string buyOne{ get; set; }
+        public string buyOnePrice{ get; set; }
+        public string buyTwo{ get; set; }
+        public string buyTwoPrice{ get; set; }
+        public string buyThree{ get; set; }
+        public string buyThreePrice{ get; set; }
+        public string buyFour{ get; set; }
+        public string buyFourPrice{ get; set; }
+        public string buyFive{ get; set; }
+        public string buyFivePrice{ get; set; }
+        public string sellOne{ get; set; }
+        public string sellOnePrice{ get; set; }
+        public string sellTwo{ get; set; }
+        public string sellTwoPrice{ get; set; }
+        public string sellThree{ get; set; }
+        public string sellThreePrice{ get; set; }
+        public string sellFour{ get; set; }
+        public string sellFourPrice{ get; set; }
+        public string sellFive{ get; set; }
+        public string sellFivePrice{ get; set; }
+        public string minurl{ get; set; }
+        public string dayurl{ get; set; }
+        public string weekurl{ get; set; }
+        public string monthurl{ get; set; }
     }
 
     //大盘类
@@ -262,22 +456,22 @@ namespace GPSmallTools
         {
         }
 
-        public string englishname;
-        public string name;
-        public string curdot;//52周最低价
-        public string curprice;//当前价格
-        public string rate;//涨跌率
-        public string dealnumber;//成交量（手）
-        public string turnover;//成交金额（万元）
+        public string englishname{ get; set; }
+        public string name{ get; set; }
+        public string curdot{ get; set; }//52周最低价
+        public string curprice{ get; set; }//当前价格
+        public string rate{ get; set; }//涨跌率
+        public string dealnumber{ get; set; }//成交量（手）
+        public string turnover{ get; set; }//成交金额（万元）
 
         //沪深两市的国外市场
-        public string date;//日期
-        public string growth;//增长点数
-        public string startdot;//开盘点数
-        public string closedot;//昨收盘点数
-        public string hdot;//今日最高点位
-        public string ldot;//今日最低点位
-        public string hdot52;//52周最高点位
-        public string ldot52;//52周最低点位
+        public string date{ get; set; }//日期
+        public string growth{ get; set; }//增长点数
+        public string startdot{ get; set; }//开盘点数
+        public string closedot{ get; set; }//昨收盘点数
+        public string hdot{ get; set; }//今日最高点位
+        public string ldot{ get; set; }//今日最低点位
+        public string hdot52{ get; set; }//52周最高点位
+        public string ldot52{ get; set; }//52周最低点位
     }
 }
