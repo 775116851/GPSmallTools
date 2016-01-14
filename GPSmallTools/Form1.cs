@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -12,6 +11,9 @@ using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Reflection;
+using log4net;
+using System.Configuration;
+using System.Threading;
 
 namespace GPSmallTools
 {
@@ -25,18 +27,20 @@ namespace GPSmallTools
         {
             InitializeComponent();
         }
-
+        private ILog log = log4net.LogManager.GetLogger(typeof(Form1));
         private void Form1_Load(object sender, EventArgs e)
         {
-            Show();
+            //log.Info("呵呵");
+            Show(1);
         }
 
-        public void Show()
+        public void Show(int fCount)
         {
             List<APIStock> listStock = new List<APIStock>();
             List<APIMarket> listMarket = new List<APIMarket>();
-            string sUrl = Convert.ToString(ConfigurationSettings.AppSettings["GPURL"]);
-            string sParam = "stockid=sz002673,sh600030,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673&list=1";
+            string sUrl = Convert.ToString(ConfigurationManager.AppSettings["GPURL"]);
+            //stockid=sz002673,sh600030,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673&list=1
+            string sParam = "stockid=" + ConfigurationManager.AppSettings["GPPamamList"] + "&list=1";
             string sMessage = HttpGet(sUrl, sParam);
             if (!string.IsNullOrEmpty(sMessage))
             {
@@ -45,7 +49,9 @@ namespace GPSmallTools
                 string sReturnMsg = Convert.ToString(jo["errMsg"]);
                 if (string.IsNullOrEmpty(sReturnCode))
                 {
-                    MessageBox.Show("请求异常");
+                    log.Error("请求异常,次数：" + fCount);
+                    //MessageBox.Show("请求异常");
+                    this.Text = "请求异常";
                     return;
                 }
                 int mReturnCode = Convert.ToInt32(sReturnCode);
@@ -63,8 +69,8 @@ namespace GPSmallTools
                             APIStock stock = new APIStock();
                             JObject jStock = (JObject)jContent["stockinfo"][i];
                             stock.name = Convert.ToString(jStock["name"]).Trim('"');
-                            stock.code = Convert.ToString(jStock["code"]).Trim('"'); ;
-                            stock.date = jStock["date"].ToString();//Convert.ToString(jStock["date"].ToString() + " " + jStock["time"].ToString());
+                            stock.code = Convert.ToString(jStock["code"]).Trim('"').Substring(2); ;
+                            stock.date = jStock["time"].ToString().Trim('"');
                             stock.openningPrice = Convert.ToString(jStock["OpenningPrice"]);
                             stock.closingPrice = Convert.ToString(jStock["closingPrice"]);
                             stock.hPrice = Convert.ToString(jStock["hPrice"]);
@@ -80,31 +86,34 @@ namespace GPSmallTools
                             stock.competitivePrice = Convert.ToString(jStock["competitivePrice"]);
                             stock.auctionPrice = Convert.ToString(jStock["auctionPrice"]);
                             stock.totalNumber = Convert.ToString(Math.Round(Convert.ToDouble(jStock["totalNumber"].ToString())/1000000, 2, MidpointRounding.AwayFromZero));
-                            stock.increase = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            string mIncrease = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));//涨跌幅
+                            stock.increase = (mIncrease.Substring(0, 1) == "-") ? mIncrease.Substring(1) : mIncrease;
                             listStock.Add(stock);
                         }
                         JObject jMarket = (JObject)jContent["market"];
                         APIMarket mSH = new APIMarket();
                         mSH.name = jMarket["shanghai"]["name"].ToString().Trim('"');
-                        mSH.curdot = Convert.ToString(jMarket["shanghai"]["curdot"]);
-                        mSH.curprice = Convert.ToString(jMarket["shanghai"]["curprice"]);
-                        mSH.rate = Convert.ToString(jMarket["shanghai"]["rate"]);
-                        mSH.dealnumber = Convert.ToString(jMarket["shanghai"]["dealnumber"]);
-                        mSH.turnover = Convert.ToString(jMarket["shanghai"]["turnover"]);
+                        mSH.curdot = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["curdot"].ToString()), 2, MidpointRounding.AwayFromZero));
+                        mSH.curprice = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["curprice"].ToString()), 2, MidpointRounding.AwayFromZero));
+                        mSH.rate = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["rate"].ToString()), 2, MidpointRounding.AwayFromZero));
+                        mSH.dealnumber = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["dealnumber"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
+                        mSH.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["turnover"].ToString()) / 10000, 2, MidpointRounding.AwayFromZero));
                         APIMarket mSZ = new APIMarket();
-                        mSZ.name = Convert.ToString(jMarket["shenzhen"]["name"]);
-                        mSZ.curdot = Convert.ToString(jMarket["shenzhen"]["curdot"]);
-                        mSZ.curprice = Convert.ToString(jMarket["shenzhen"]["curprice"]);
-                        mSZ.rate = Convert.ToString(jMarket["shenzhen"]["rate"]);
-                        mSZ.dealnumber = Convert.ToString(jMarket["shenzhen"]["dealnumber"]);
-                        mSZ.turnover = Convert.ToString(jMarket["shenzhen"]["turnover"]);
+                        mSZ.name = Convert.ToString(jMarket["shenzhen"]["name"]).Trim('"');
+                        mSZ.curdot = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["curdot"].ToString()), 2, MidpointRounding.AwayFromZero));
+                        mSZ.curprice = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["curprice"].ToString()), 2, MidpointRounding.AwayFromZero));
+                        mSZ.rate = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["rate"].ToString()), 2, MidpointRounding.AwayFromZero));
+                        mSZ.dealnumber = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["dealnumber"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
+                        mSZ.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["turnover"].ToString()) / 10000, 2, MidpointRounding.AwayFromZero));
                         listMarket.Add(mSH);
                         listMarket.Add(mSZ);
                     }
                 }
                 else if (!Enum.IsDefined(typeof(ErrorCode), mReturnCode))
                 {
-                    MessageBox.Show("返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
+                    log.Error("返回未知异常,次数：" + fCount + ",异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
+                    //MessageBox.Show("返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
+                    this.Text = "返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg;
                     return;
                 }
                 else
@@ -114,9 +123,62 @@ namespace GPSmallTools
             }
             else
             {
-                MessageBox.Show("返回数据空");
+                log.Error("返回数据空,次数：" + fCount);
+                //MessageBox.Show("返回数据空");
+                this.Text = "返回数据空";
                 return;
             }
+            if(listMarket.Count > 0)
+            {
+                APIMarket apiSHZS = listMarket[0];
+                double shRate = Convert.ToDouble(apiSHZS.rate);
+                Color shColor = Color.Red;
+                string shZF = "+";
+                string shJT = "↑";
+                if (shRate >= 0)
+                {
+                    shColor = Color.Red;
+                    shZF = "+";
+                    shJT = "↑";
+                }
+                else
+                {
+                    shColor = Color.Green;
+                    shZF = "-";
+                    shJT = "↓";
+                }
+                lblSHZS1.Text = apiSHZS.name;
+                lblSHZS1.ForeColor = shColor;
+                lblSHZS2.Text = shJT + apiSHZS.curdot;
+                lblSHZS2.ForeColor = shColor;
+                lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate;
+                lblSHZS3.ForeColor = shColor;
+                APIMarket apiSZZS = listMarket[1];
+                double szRate = Convert.ToDouble(apiSZZS.rate);
+                Color szColor = Color.Red;
+                string szZF = "+";
+                string szJT = "↑";
+                if (szRate >= 0)
+                {
+                    szColor = Color.Red;
+                    szZF = "+";
+                    szJT = "↑";
+                }
+                else
+                {
+                    szColor = Color.Green;
+                    szZF = "-";
+                    szJT = "↓";
+                }
+                lblSZZS1.Text = apiSZZS.name;
+                lblSZZS1.ForeColor = szColor;
+                lblSZZS2.Text = szJT + apiSZZS.curdot;
+                lblSZZS2.ForeColor = szColor;
+                lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate;
+                lblSZZS3.ForeColor = szColor;
+            }
+            #region 绑定数据到DataGridView
+            
             dataGridView1.Columns.Clear();
             //dataGridView1.Columns[4].DataPropertyName
             DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
@@ -257,32 +319,42 @@ namespace GPSmallTools
             //dataGridView1.RowHeadersVisible = false; // 行头隐藏
             dataGridView1.ReadOnly = true;
             dataGridView1.AutoGenerateColumns = false;
-            dataGridView1.DataSource = listStock;
             
+            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; 
+            dataGridView1.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridView1.DataSource = listStock;
             //http://wsh1798.iteye.com/blog/601592
+            #endregion
         }
 
         //接口请求数据
         public string HttpGet(string Url, string postDataStr)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : "?") + postDataStr);
-            request.Method = "GET";
-            request.ContentType = "text/html;charset=UTF-8";
-            //添加header
-            request.Headers.Add("apikey", Convert.ToString(ConfigurationSettings.AppSettings["GPKey"]));
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream myResponseStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
-            //string retString = myStreamReader.ReadToEnd();
-            string StrDate = "";
             string retString = "";
-            while ((StrDate = myStreamReader.ReadLine()) != null)
+            try
             {
-                retString += StrDate + "\r\n";
-            }
-            myStreamReader.Close();
-            myResponseStream.Close();
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : "?") + postDataStr);
+                request.Method = "GET";
+                request.ContentType = "text/html;charset=UTF-8";
+                //添加header
+                request.Headers.Add("apikey", Convert.ToString(ConfigurationManager.AppSettings["GPKey"]));
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream myResponseStream = response.GetResponseStream();
+                StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
+                //string retString = myStreamReader.ReadToEnd();
+                string StrDate = "";
 
+                while ((StrDate = myStreamReader.ReadLine()) != null)
+                {
+                    retString += StrDate + "\r\n";
+                }
+                myStreamReader.Close();
+                myResponseStream.Close();
+            }
+            catch (Exception ex)
+            {
+                log.Error("调用接口请求数据出现异常,异常信息:" + ex.Message + ";异常详情：" + ex);
+            }
             return retString;
         }
 
@@ -360,7 +432,15 @@ namespace GPSmallTools
         //刷新
         private void btnSelect_Click(object sender, EventArgs e)
         {
-            Show();
+            FormMessageBox.Show(LoadMode.Warning, "呵呵呵呵");
+            int fCount = 0;
+            //while(true)
+            //{
+            //    fCount++;
+                Show(fCount);
+            //    Thread.Sleep(1000);
+            //    log.Info("运行次数：" + fCount);
+            //}
         }
 
         //左右扩展
@@ -394,6 +474,182 @@ namespace GPSmallTools
                 btnDown.Text = "︾";
             }
         }
+
+        //添加
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            string mCode = txtCode.Text.Trim();
+            if(string.IsNullOrEmpty(mCode))
+            {
+                MessageBox.Show("请填入证券代码");
+                return;
+            }
+            //判断是否全数字及长度是否为六位
+            int kCode;
+            if (int.TryParse(mCode, out kCode) == false)
+            {
+                MessageBox.Show("证券代码必须为六位数字");
+                return;
+            }
+            if (mCode.Length != 6)
+            {
+                MessageBox.Show("证券代码必须为六位数字");
+                return;
+            }
+            if (mCode.Substring(0, 1) == "6")
+            {
+                mCode = "sh" + mCode;
+            }
+            else
+            {
+                mCode = "sz" + mCode;
+            }
+            string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]);
+            if (YYCode.Contains(mCode))
+            {
+                MessageBox.Show("添加成功");
+            }
+            else
+            {
+                YYCode = YYCode + "," + mCode;
+                UpdateAppConfig("GPPamamList", YYCode);
+            }
+            Show(1);
+        }
+
+        //删除
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("您确定要删除吗？", "删除提醒", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, MessageBoxOptions.DefaultDesktopOnly) == DialogResult.No)
+            {
+                return;
+            }
+            string mCode = txtCode.Text.Trim();
+            if (string.IsNullOrEmpty(mCode))
+            {
+                MessageBox.Show("请填入证券代码");
+                return;
+            }
+            //判断是否全数字及长度是否为六位
+            int kCode;
+            if (int.TryParse(mCode, out kCode) == false)
+            {
+                MessageBox.Show("证券代码必须为六位数字");
+                return;
+            }
+            if (mCode.Length != 6)
+            {
+                MessageBox.Show("证券代码必须为六位数字");
+                return;
+            }
+            if (mCode.Substring(0, 1) == "6")
+            {
+                mCode = "sh" + mCode;
+            }
+            else
+            {
+                mCode = "sz" + mCode;
+            }
+            //sh600030,sz002673,sz002673
+            string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]).Trim();
+            if (YYCode.Contains(mCode))
+            {
+                int a = YYCode.ToUpper().IndexOf(mCode.ToUpper());
+                string sT = "";
+                string eT = "";
+                if (a <= 0)
+                {
+                    eT = YYCode.Substring(9);
+                }
+                else if(a + 7 <= YYCode.Length)
+                {
+                    sT = YYCode.Substring(0, a - 1);
+                }
+                else
+                {
+                    sT = YYCode.Substring(0, a - 1);
+                    eT = YYCode.Substring(a + 9);
+                    
+                }
+                YYCode = sT + eT;
+                UpdateAppConfig("GPPamamList", YYCode);
+                MessageBox.Show("删除成功");
+            }
+            else
+            {
+                MessageBox.Show("删除成功");
+                return;
+            }
+            Show(1);
+        }
+
+        //全删除
+        private void btnAllRemove_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("您确定要全删除吗？", "删除提醒", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, MessageBoxOptions.DefaultDesktopOnly) == DialogResult.Yes)
+            {
+                string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]).Trim();
+                UpdateAppConfig("GPPamamList", "");
+                MessageBox.Show("全删除成功");
+                Show(1);
+            }
+        }
+        
+        //涨红跌绿
+        private void dataGridView1_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            dataGridView1.Columns[e.RowIndex].SortMode = DataGridViewColumnSortMode.NotSortable;//表头不排序 为标题居中
+            //昨日收盘价
+            object sValue = this.dataGridView1.Rows[e.RowIndex].Cells["closingPrice"].Value;
+            //当前价
+            object cValue = this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Value;
+            //差价
+            double iValue = Convert.ToDouble(cValue) - Convert.ToDouble(sValue);
+            //涨跌幅( (当前价-昨收盘价)/昨收盘价 )
+            if (iValue > 0)//差价
+            {
+                this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Red;
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Red;
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 12);
+            }
+            else if (iValue < 0)
+            {
+                this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Green;
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Green;
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 12);
+            }
+            else
+            {
+                this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.White;
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.White;
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 9);
+            }
+        }
+
+        //更新配置文件
+        private void UpdateAppConfig(string newKey, string newValue)
+        {
+            bool isExits = false;
+            foreach (string key in ConfigurationManager.AppSettings)
+            {
+                if (key == newKey)
+                {
+                    isExits = true;
+                }
+            }
+            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            if (isExits)
+            {
+                config.AppSettings.Settings.Remove(newKey);
+            }
+            config.AppSettings.Settings.Add(newKey, newValue);
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        
+
+        
         
     }
 
@@ -406,7 +662,7 @@ namespace GPSmallTools
 
         public string name { get; set; }//股票名称
         public object code { get; set; }//股票代码
-        public string date;//日期
+        public string date { get; set; }//日期
         public string openningPrice { get; set; }//开盘价
         public string closingPrice{ get; set; }//昨日收盘价
         public string hPrice{ get; set; }//今日最高价
