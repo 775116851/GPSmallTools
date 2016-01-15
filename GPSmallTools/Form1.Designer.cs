@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.btnSelect = new System.Windows.Forms.Button();
             this.btnRight = new System.Windows.Forms.Button();
@@ -42,7 +44,20 @@
             this.lblSHZS3 = new System.Windows.Forms.Label();
             this.lblSZZS2 = new System.Windows.Forms.Label();
             this.lblSZZS3 = new System.Windows.Forms.Label();
+            this.notifyIconMsg = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStripMsg = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.退出ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cboTopMost = new System.Windows.Forms.CheckBox();
+            this.trackBarOpacity = new System.Windows.Forms.TrackBar();
+            this.txtOpacity = new System.Windows.Forms.TextBox();
+            this.btnDownX = new System.Windows.Forms.Button();
+            this.contextMenuStripGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.置顶ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.删除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.contextMenuStripMsg.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).BeginInit();
+            this.contextMenuStripGridView.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -61,9 +76,9 @@
             // 
             // btnSelect
             // 
-            this.btnSelect.Location = new System.Drawing.Point(7, 346);
+            this.btnSelect.Location = new System.Drawing.Point(6, 346);
             this.btnSelect.Name = "btnSelect";
-            this.btnSelect.Size = new System.Drawing.Size(75, 23);
+            this.btnSelect.Size = new System.Drawing.Size(83, 23);
             this.btnSelect.TabIndex = 1;
             this.btnSelect.Text = "刷  新";
             this.btnSelect.UseVisualStyleBackColor = true;
@@ -71,9 +86,9 @@
             // 
             // btnRight
             // 
-            this.btnRight.Location = new System.Drawing.Point(169, 346);
+            this.btnRight.Location = new System.Drawing.Point(178, 346);
             this.btnRight.Name = "btnRight";
-            this.btnRight.Size = new System.Drawing.Size(75, 23);
+            this.btnRight.Size = new System.Drawing.Size(83, 23);
             this.btnRight.TabIndex = 2;
             this.btnRight.Text = "》";
             this.btnRight.UseVisualStyleBackColor = true;
@@ -81,9 +96,9 @@
             // 
             // btnDown
             // 
-            this.btnDown.Location = new System.Drawing.Point(88, 346);
+            this.btnDown.Location = new System.Drawing.Point(92, 346);
             this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(75, 23);
+            this.btnDown.Size = new System.Drawing.Size(83, 23);
             this.btnDown.TabIndex = 3;
             this.btnDown.Text = "︾";
             this.btnDown.UseVisualStyleBackColor = true;
@@ -91,7 +106,7 @@
             // 
             // txtCode
             // 
-            this.txtCode.Location = new System.Drawing.Point(6, 389);
+            this.txtCode.Location = new System.Drawing.Point(6, 382);
             this.txtCode.MaxLength = 6;
             this.txtCode.Name = "txtCode";
             this.txtCode.Size = new System.Drawing.Size(93, 21);
@@ -100,7 +115,7 @@
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(104, 389);
+            this.btnAdd.Location = new System.Drawing.Point(104, 382);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(49, 23);
             this.btnAdd.TabIndex = 5;
@@ -110,7 +125,7 @@
             // 
             // btnRemove
             // 
-            this.btnRemove.Location = new System.Drawing.Point(158, 389);
+            this.btnRemove.Location = new System.Drawing.Point(158, 382);
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Size = new System.Drawing.Size(49, 23);
             this.btnRemove.TabIndex = 6;
@@ -120,7 +135,7 @@
             // 
             // btnAllRemove
             // 
-            this.btnAllRemove.Location = new System.Drawing.Point(212, 389);
+            this.btnAllRemove.Location = new System.Drawing.Point(212, 382);
             this.btnAllRemove.Name = "btnAllRemove";
             this.btnAllRemove.Size = new System.Drawing.Size(49, 23);
             this.btnAllRemove.TabIndex = 7;
@@ -188,11 +203,105 @@
             this.lblSZZS3.TabIndex = 13;
             this.lblSZZS3.Text = "B3";
             // 
+            // notifyIconMsg
+            // 
+            this.notifyIconMsg.BalloonTipText = "DDF";
+            this.notifyIconMsg.BalloonTipTitle = "QQQ";
+            this.notifyIconMsg.ContextMenuStrip = this.contextMenuStripMsg;
+            this.notifyIconMsg.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIconMsg.Icon")));
+            this.notifyIconMsg.Tag = "风";
+            this.notifyIconMsg.Text = "我只是低调的在这待着，别惹我";
+            this.notifyIconMsg.Visible = true;
+            this.notifyIconMsg.DoubleClick += new System.EventHandler(this.notifyIconMsg_DoubleClick);
+            // 
+            // contextMenuStripMsg
+            // 
+            this.contextMenuStripMsg.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.退出ToolStripMenuItem});
+            this.contextMenuStripMsg.Name = "contextMenuStripMsg";
+            this.contextMenuStripMsg.Size = new System.Drawing.Size(153, 48);
+            this.contextMenuStripMsg.Text = "退出系统";
+            // 
+            // 退出ToolStripMenuItem
+            // 
+            this.退出ToolStripMenuItem.Name = "退出ToolStripMenuItem";
+            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.退出ToolStripMenuItem.Text = "退出";
+            this.退出ToolStripMenuItem.Click += new System.EventHandler(this.退出ToolStripMenuItem_Click);
+            // 
+            // cboTopMost
+            // 
+            this.cboTopMost.AutoSize = true;
+            this.cboTopMost.Location = new System.Drawing.Point(159, 422);
+            this.cboTopMost.Name = "cboTopMost";
+            this.cboTopMost.Size = new System.Drawing.Size(48, 16);
+            this.cboTopMost.TabIndex = 14;
+            this.cboTopMost.Text = "置顶";
+            this.cboTopMost.UseVisualStyleBackColor = true;
+            this.cboTopMost.CheckedChanged += new System.EventHandler(this.cboTopMost_CheckedChanged);
+            // 
+            // trackBarOpacity
+            // 
+            this.trackBarOpacity.Location = new System.Drawing.Point(2, 408);
+            this.trackBarOpacity.Maximum = 100;
+            this.trackBarOpacity.Name = "trackBarOpacity";
+            this.trackBarOpacity.Size = new System.Drawing.Size(115, 45);
+            this.trackBarOpacity.TabIndex = 15;
+            this.trackBarOpacity.TickFrequency = 10;
+            this.trackBarOpacity.TickStyle = System.Windows.Forms.TickStyle.Both;
+            this.trackBarOpacity.Value = 33;
+            this.trackBarOpacity.Scroll += new System.EventHandler(this.trackBarOpacity_Scroll);
+            // 
+            // txtOpacity
+            // 
+            this.txtOpacity.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtOpacity.Location = new System.Drawing.Point(115, 422);
+            this.txtOpacity.MaxLength = 3;
+            this.txtOpacity.Name = "txtOpacity";
+            this.txtOpacity.Size = new System.Drawing.Size(33, 14);
+            this.txtOpacity.TabIndex = 16;
+            this.txtOpacity.Text = "100";
+            this.txtOpacity.MouseLeave += new System.EventHandler(this.txtOpacity_MouseLeave);
+            // 
+            // btnDownX
+            // 
+            this.btnDownX.Location = new System.Drawing.Point(212, 419);
+            this.btnDownX.Name = "btnDownX";
+            this.btnDownX.Size = new System.Drawing.Size(49, 23);
+            this.btnDownX.TabIndex = 17;
+            this.btnDownX.Text = "︾";
+            this.btnDownX.UseVisualStyleBackColor = true;
+            this.btnDownX.Click += new System.EventHandler(this.btnDownX_Click);
+            // 
+            // contextMenuStripGridView
+            // 
+            this.contextMenuStripGridView.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.置顶ToolStripMenuItem,
+            this.删除ToolStripMenuItem});
+            this.contextMenuStripGridView.Name = "contextMenuStripGridView";
+            this.contextMenuStripGridView.Size = new System.Drawing.Size(101, 48);
+            // 
+            // 置顶ToolStripMenuItem
+            // 
+            this.置顶ToolStripMenuItem.Name = "置顶ToolStripMenuItem";
+            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.置顶ToolStripMenuItem.Text = "置顶";
+            // 
+            // 删除ToolStripMenuItem
+            // 
+            this.删除ToolStripMenuItem.Name = "删除ToolStripMenuItem";
+            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.删除ToolStripMenuItem.Text = "删除";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(264, 438);
+            this.ClientSize = new System.Drawing.Size(264, 372);
+            this.Controls.Add(this.btnDownX);
+            this.Controls.Add(this.txtOpacity);
+            this.Controls.Add(this.trackBarOpacity);
+            this.Controls.Add(this.cboTopMost);
             this.Controls.Add(this.lblSZZS3);
             this.Controls.Add(this.lblSZZS2);
             this.Controls.Add(this.lblSHZS3);
@@ -208,13 +317,20 @@
             this.Controls.Add(this.btnSelect);
             this.Controls.Add(this.dataGridView1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.KeyPreview = true;
             this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "Form1";
             this.Opacity = 0.6D;
-            this.ShowIcon = false;
-            this.Text = "Form1";
+            this.Text = "测试";
+            this.Activated += new System.EventHandler(this.Form1_Activated);
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
+            this.Leave += new System.EventHandler(this.Form1_Leave);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.contextMenuStripMsg.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).EndInit();
+            this.contextMenuStripGridView.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -236,6 +352,16 @@
         private System.Windows.Forms.Label lblSHZS3;
         private System.Windows.Forms.Label lblSZZS2;
         private System.Windows.Forms.Label lblSZZS3;
+        private System.Windows.Forms.NotifyIcon notifyIconMsg;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripMsg;
+        private System.Windows.Forms.ToolStripMenuItem 退出ToolStripMenuItem;
+        private System.Windows.Forms.CheckBox cboTopMost;
+        private System.Windows.Forms.TrackBar trackBarOpacity;
+        private System.Windows.Forms.TextBox txtOpacity;
+        private System.Windows.Forms.Button btnDownX;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripGridView;
+        private System.Windows.Forms.ToolStripMenuItem 置顶ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 删除ToolStripMenuItem;
     }
 }
 

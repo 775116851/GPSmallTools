@@ -31,16 +31,59 @@ namespace GPSmallTools
         private void Form1_Load(object sender, EventArgs e)
         {
             //log.Info("呵呵");
+            BindConfig();
             Show(1);
+        }
+
+        //基础数据绑定
+        private void BindConfig()
+        {
+            //置顶
+            string sTopMost = Convert.ToString(ConfigurationManager.AppSettings["GPTopMost"]);
+            if (string.IsNullOrEmpty(sTopMost) || sTopMost != "1")
+            {
+                cboTopMost.Checked = false;
+                this.TopMost = false;
+            }
+            else
+            {
+                cboTopMost.Checked = true;
+                this.TopMost = true;
+            }
+            //透明度
+            string sOpacity = Convert.ToString(ConfigurationManager.AppSettings["GPOpacity"]);
+            int mOpacity = 0;
+            if (string.IsNullOrEmpty(sOpacity) || int.TryParse(sOpacity, out mOpacity) == false || mOpacity > 100 || mOpacity < 30)
+            {
+                trackBarOpacity.Value = 100;
+                txtOpacity.Text = "100";
+                this.Opacity = 100.00/100;
+            }
+            else
+            {
+                trackBarOpacity.Value = mOpacity;
+                txtOpacity.Text = sOpacity;
+                this.Opacity = Convert.ToDouble(mOpacity)/100;
+            }
         }
 
         public void Show(int fCount)
         {
+            //if(!((DateTime.Now.Hour > 9 && DateTime.Now.Hour < 12) || (DateTime.Now.Hour >= 13 && DateTime.Now.Hour < 16)))
+            //{
+            //    return;
+            //}
             List<APIStock> listStock = new List<APIStock>();
             List<APIMarket> listMarket = new List<APIMarket>();
             string sUrl = Convert.ToString(ConfigurationManager.AppSettings["GPURL"]);
             //stockid=sz002673,sh600030,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673&list=1
-            string sParam = "stockid=" + ConfigurationManager.AppSettings["GPPamamList"] + "&list=1";
+            string stockidList = ConfigurationManager.AppSettings["GPPamamList"].Trim();
+            if(string.IsNullOrEmpty(stockidList))
+            {
+                MessageBox.Show("请先添加股票");
+                return;
+            }
+            string sParam = "stockid=" + stockidList + "&list=1";
             string sMessage = HttpGet(sUrl, sParam);
             if (!string.IsNullOrEmpty(sMessage))
             {
@@ -144,14 +187,14 @@ namespace GPSmallTools
                 else
                 {
                     shColor = Color.Green;
-                    shZF = "-";
+                    shZF = "";
                     shJT = "↓";
                 }
                 lblSHZS1.Text = apiSHZS.name;
                 lblSHZS1.ForeColor = shColor;
                 lblSHZS2.Text = shJT + apiSHZS.curdot;
                 lblSHZS2.ForeColor = shColor;
-                lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate;
+                lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate + "%";
                 lblSHZS3.ForeColor = shColor;
                 APIMarket apiSZZS = listMarket[1];
                 double szRate = Convert.ToDouble(apiSZZS.rate);
@@ -167,16 +210,17 @@ namespace GPSmallTools
                 else
                 {
                     szColor = Color.Green;
-                    szZF = "-";
+                    szZF = "";
                     szJT = "↓";
                 }
                 lblSZZS1.Text = apiSZZS.name;
                 lblSZZS1.ForeColor = szColor;
                 lblSZZS2.Text = szJT + apiSZZS.curdot;
                 lblSZZS2.ForeColor = szColor;
-                lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate;
+                lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate + "%";
                 lblSZZS3.ForeColor = szColor;
             }
+
             #region 绑定数据到DataGridView
             
             dataGridView1.Columns.Clear();
@@ -187,6 +231,7 @@ namespace GPSmallTools
             col1.Name = "name";
             col1.Width = 80;
             col1.ReadOnly = true;
+            col1.ContextMenuStrip = contextMenuStripGridView;
             dataGridView1.Columns.Insert(0, col1); 
             DataGridViewTextBoxColumn col3 = new DataGridViewTextBoxColumn();
             col3.HeaderText = "当前价";
@@ -194,6 +239,7 @@ namespace GPSmallTools
             col3.Name = "currentPrice";
             col3.Width = 70;
             col3.ReadOnly = true;
+            col3.ContextMenuStrip = contextMenuStripGridView;
             dataGridView1.Columns.Insert(1, col3);
             DataGridViewTextBoxColumn col18 = new DataGridViewTextBoxColumn();
             col18.HeaderText = "涨幅(%)";
@@ -201,6 +247,7 @@ namespace GPSmallTools
             col18.Name = "increase";
             col18.Width = 75;
             col18.ReadOnly = true;
+            col18.ContextMenuStrip = contextMenuStripGridView;
             dataGridView1.Columns.Insert(2, col18);
             DataGridViewTextBoxColumn col2 = new DataGridViewTextBoxColumn();
             col2.HeaderText = "股票代码";
@@ -208,6 +255,7 @@ namespace GPSmallTools
             col2.Name = "code";
             col2.Width = 80;
             col2.ReadOnly = true;
+            col2.ContextMenuStrip = contextMenuStripGridView;
             dataGridView1.Columns.Insert(3, col2);
             DataGridViewTextBoxColumn col6 = new DataGridViewTextBoxColumn();
             col6.HeaderText = "今日最高价";
@@ -358,81 +406,11 @@ namespace GPSmallTools
             return retString;
         }
 
-        #region 错误码相关
-        //错误码
-        public enum ErrorCode : int
-        {
-            [Description("成功")]
-            Success = 0,
-            [Description("用户请求过期")]
-            Error1 = 300101,
-            [Description("用户日调用量超限")]
-            Error2 = 300102,
-            [Description("服务每秒调用量超限")]
-            Error3 = 300103,
-            [Description("服务日调用量超限")]
-            Error4 = 300104,
-            [Description("url无法解析")]
-            Error5 = 300201,
-            [Description("请求缺少apikey，登录即可获取")]
-            Error6 = 300202,
-            [Description("服务没有取到apikey或secretkey")]
-            Error7 = 300203,
-            [Description("apikey不存在")]
-            Error8 = 300204,
-            [Description("api不存在")]
-            Error9 = 300205,
-            [Description("api已关闭服务")]
-            Error10 = 300206,
-            [Description("余额不足，请充值")]
-            Error11 = 300207,
-            [Description("未通过实名验证")]
-            Error12 = 300208,
-            [Description("服务商响应status非200")]
-            Error13 = 300209,
-            [Description("内部错误")]
-            Error14 = 300301,
-            [Description("系统繁忙稍候再试")]
-            Error15 = 300302,
-        }
-
-        /// <summary>
-        /// 返回指定枚举类型的指定值的描述
-        /// </summary>
-        /// <param name="t">枚举类型</param>
-        /// <param name="v">枚举值</param>
-        /// <returns></returns>
-        public static string GetDescription(System.Type t, object v)
-        {
-            try
-            {
-                FieldInfo fi = t.GetField(GetName(t, v));
-                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                return (attributes.Length > 0) ? attributes[0].Description : GetName(t, v);
-            }
-            catch
-            {
-                return "UNKNOWN";
-            }
-        }
-
-        private static string GetName(System.Type t, object v)
-        {
-            try
-            {
-                return Enum.GetName(t, v);
-            }
-            catch
-            {
-                return "UNKNOWN";
-            }
-        }
-        #endregion
-
         //刷新
         private void btnSelect_Click(object sender, EventArgs e)
         {
-            FormMessageBox.Show(LoadMode.Warning, "呵呵呵呵");
+            notifyIconMsg.ShowBalloonTip(4000, "消息提醒", "刷新了数据", ToolTipIcon.Info);
+            //FormMessageBox.Show(LoadMode.Warning, "呵呵呵呵");//弹出窗口(暂不使用)
             int fCount = 0;
             //while(true)
             //{
@@ -448,8 +426,8 @@ namespace GPSmallTools
         {
             if (btnRight.Text.Trim() == "》")
             {
-                this.Width = 919;
-                dataGridView1.Width = 893;
+                this.Width = 985;
+                dataGridView1.Width = 968;
                 btnRight.Text = "《";
             }
             else
@@ -465,12 +443,29 @@ namespace GPSmallTools
         {
             if (btnDown.Text.Trim() == "︾")
             {
-                this.Height = 630;
+                this.Height = 480;
                 btnDown.Text = "︽";
             }
             else
             {
-                this.Height = 355;
+                this.Height = 400;//默认设置400
+                btnDown.Text = "︾";
+                btnDownX.Text = "︾";
+            }
+        }
+
+        //上下扩展X
+        private void btnDownX_Click(object sender, EventArgs e)
+        {
+            if (btnDownX.Text.Trim() == "︾")
+            {
+                this.Height = 630;
+                btnDownX.Text = "︽";
+            }
+            else
+            {
+                this.Height = 400;//默认设置400
+                btnDownX.Text = "︾";
                 btnDown.Text = "︾";
             }
         }
@@ -504,14 +499,22 @@ namespace GPSmallTools
             {
                 mCode = "sz" + mCode;
             }
-            string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]);
+            string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]).Trim();
             if (YYCode.Contains(mCode))
             {
                 MessageBox.Show("添加成功");
             }
             else
             {
-                YYCode = YYCode + "," + mCode;
+                if (string.IsNullOrEmpty(YYCode))
+                {
+                    YYCode = mCode;
+                }
+                else
+                {
+                    YYCode = YYCode + "," + mCode;
+                }
+                
                 UpdateAppConfig("GPPamamList", YYCode);
             }
             Show(1);
@@ -626,6 +629,66 @@ namespace GPSmallTools
             }
         }
 
+        //消息提示相关
+        private void notifyIconMsg_DoubleClick(object sender, EventArgs e)
+        {
+            this.notifyIconMsg.ShowBalloonTip(3000, "消息提醒", "叫你小子别碰我，你还敢碰，你以为你是吊炸天么？", ToolTipIcon.Error);
+        }
+
+        //退出系统
+        private void 退出ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        //是否置顶
+        private void cboTopMost_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cboTopMost.Checked == true)
+            {
+                this.TopMost = true;
+                UpdateAppConfig("GPTopMost", "1");
+            }
+            else
+            {
+                this.TopMost = false;
+                UpdateAppConfig("GPTopMost", "0");
+            }
+        }
+
+        //透明度修改
+        private void txtOpacity_MouseLeave(object sender, EventArgs e)
+        {
+            string sOpacity = txtOpacity.Text.Trim();
+            int mOpactity = 0;
+            if (string.IsNullOrEmpty(sOpacity) || int.TryParse(sOpacity, out mOpactity) == false || mOpactity > 100 || mOpactity < 30)
+            {
+                this.notifyIconMsg.ShowBalloonTip(3000, "消息提醒", "透明度设置有误，请重新设置", ToolTipIcon.Error);
+                txtOpacity.Text = "40";
+                return;
+            }
+            trackBarOpacity.Value = mOpactity;
+            this.Opacity = Convert.ToDouble(mOpactity) / 100;
+            UpdateAppConfig("GPOpacity", sOpacity);
+        }
+
+        //透明度修改
+        private void trackBarOpacity_Scroll(object sender, EventArgs e)
+        {
+            int mOpactity = trackBarOpacity.Value;
+            if (mOpactity > 100 || mOpactity < 30)
+            {
+                this.notifyIconMsg.ShowBalloonTip(3000, "消息提醒", "透明度设置有误，设置范围为(20 -> 100)，请重新设置", ToolTipIcon.Error);
+                txtOpacity.Text = "40";
+                trackBarOpacity.Value = 40;
+                return;
+            }
+            txtOpacity.Text = mOpactity.ToString();
+            this.Opacity = Convert.ToDouble(mOpactity) / 100;
+            UpdateAppConfig("GPOpacity", mOpactity.ToString());
+        }
+
+
         //更新配置文件
         private void UpdateAppConfig(string newKey, string newValue)
         {
@@ -647,9 +710,154 @@ namespace GPSmallTools
             ConfigurationManager.RefreshSection("appSettings");
         }
 
-        
+        #region 快捷键相关
+        //KeyPreview = true
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            //MessageBox.Show(e.KeyValue.ToString());
+            if (e.KeyCode == Keys.F1 && e.Modifiers == Keys.Control)
+            {
+                MessageBox.Show("Ctrl + F1");
+            }
+            if ((int)e.Modifiers == ((int)Keys.Control + (int)Keys.Alt) && e.KeyCode == Keys.D0)
+            {
+                MessageBox.Show("Ctrl + Alt + 0");
+            }
+            this.AcceptButton = btnSelect;
+            //this.CancelButton = btnSelect;
+        }
 
-        
+        //在Form的Activate事件中注册热键，本例中注册Win+Q，Win+W，Win+Z这三个热键。这里的Id号可任意设置，但要保证不被重复。
+        private void Form1_Activated(object sender, EventArgs e)
+        {
+            //注册热键Win+Q，Id号为100。HotKey.KeyModifiers.Shift也可以直接使用数字4来表示。
+            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.WindowsKey, Keys.Q);//显示
+            //注册热键Win+W，Id号为101。HotKey.KeyModifiers.Ctrl也可以直接使用数字2来表示。
+            HotKey.RegisterHotKey(Handle, 101, HotKey.KeyModifiers.WindowsKey, Keys.W);//隐藏
+            //注册热键Win+Z，Id号为102。HotKey.KeyModifiers.Alt也可以直接使用数字1来表示。
+            HotKey.RegisterHotKey(Handle, 102, HotKey.KeyModifiers.WindowsKey, Keys.Z);//退出
+        }
+
+        //在Form的Leave事件中注销热键。
+        private void Form1_Leave(object sender, EventArgs e)
+        {
+            //注销Id号为100的热键设定
+            HotKey.UnregisterHotKey(Handle, 100);
+            //注销Id号为101的热键设定
+            HotKey.UnregisterHotKey(Handle, 101);
+            //注销Id号为102的热键设定
+            HotKey.UnregisterHotKey(Handle, 102);
+        }
+
+        /// <summary>
+        /// 重载From中的WndProc函数
+        /// 监视Windows消息
+        /// 重载WndProc方法，用于实现热键响应
+        /// </summary>
+        /// <param name="m"></param>
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_HOTKEY = 0x0312;
+            //按快捷键 
+            switch (m.Msg)
+            {
+                case WM_HOTKEY:
+                    switch (m.WParam.ToInt32())
+                    {
+                        case 100:    //按下的是Shift+S
+                            //此处填写快捷键响应代码 
+                            //MessageBox.Show("Win + Q");
+                            this.Show();
+                            break;
+                        case 101:    //按下的是Ctrl+B
+                            //此处填写快捷键响应代码
+                            //MessageBox.Show("Win+ W");
+                            this.Hide();
+                            break;
+                        case 102:    //按下的是Alt+D
+                            //此处填写快捷键响应代码
+                            //MessageBox.Show("Win + Z");
+                            this.Close();
+                            break;
+                    }
+                    break;
+            }
+            base.WndProc(ref m);
+        }
+
+        #endregion
+
+        #region 错误码相关
+        //错误码
+        public enum ErrorCode : int
+        {
+            [Description("成功")]
+            Success = 0,
+            [Description("用户请求过期")]
+            Error1 = 300101,
+            [Description("用户日调用量超限")]
+            Error2 = 300102,
+            [Description("服务每秒调用量超限")]
+            Error3 = 300103,
+            [Description("服务日调用量超限")]
+            Error4 = 300104,
+            [Description("url无法解析")]
+            Error5 = 300201,
+            [Description("请求缺少apikey，登录即可获取")]
+            Error6 = 300202,
+            [Description("服务没有取到apikey或secretkey")]
+            Error7 = 300203,
+            [Description("apikey不存在")]
+            Error8 = 300204,
+            [Description("api不存在")]
+            Error9 = 300205,
+            [Description("api已关闭服务")]
+            Error10 = 300206,
+            [Description("余额不足，请充值")]
+            Error11 = 300207,
+            [Description("未通过实名验证")]
+            Error12 = 300208,
+            [Description("服务商响应status非200")]
+            Error13 = 300209,
+            [Description("内部错误")]
+            Error14 = 300301,
+            [Description("系统繁忙稍候再试")]
+            Error15 = 300302,
+        }
+
+        /// <summary>
+        /// 返回指定枚举类型的指定值的描述
+        /// </summary>
+        /// <param name="t">枚举类型</param>
+        /// <param name="v">枚举值</param>
+        /// <returns></returns>
+        public static string GetDescription(System.Type t, object v)
+        {
+            try
+            {
+                FieldInfo fi = t.GetField(GetName(t, v));
+                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                return (attributes.Length > 0) ? attributes[0].Description : GetName(t, v);
+            }
+            catch
+            {
+                return "UNKNOWN";
+            }
+        }
+
+        private static string GetName(System.Type t, object v)
+        {
+            try
+            {
+                return Enum.GetName(t, v);
+            }
+            catch
+            {
+                return "UNKNOWN";
+            }
+        }
+        #endregion
+
         
     }
 

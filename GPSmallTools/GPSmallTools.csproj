@@ -65,6 +65,7 @@
     <Compile Include="FormMessageBox.Designer.cs">
       <DependentUpon>FormMessageBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="HotKey.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -104,6 +105,8 @@
     <Content Include="3rdParty\LitJSON.dll" />
     <Content Include="3rdParty\log4net.dll" />
     <Content Include="3rdParty\Newtonsoft.Json.Net20.dll" />
+    <Content Include="Images\feng_16px.ico" />
+    <Content Include="Images\feng_24px.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
