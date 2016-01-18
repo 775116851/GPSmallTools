@@ -34,10 +34,6 @@
             this.btnSelect = new System.Windows.Forms.Button();
             this.btnRight = new System.Windows.Forms.Button();
             this.btnDown = new System.Windows.Forms.Button();
-            this.txtCode = new System.Windows.Forms.TextBox();
-            this.btnAdd = new System.Windows.Forms.Button();
-            this.btnRemove = new System.Windows.Forms.Button();
-            this.btnAllRemove = new System.Windows.Forms.Button();
             this.lblSHZS1 = new System.Windows.Forms.Label();
             this.lblSZZS1 = new System.Windows.Forms.Label();
             this.lblSHZS2 = new System.Windows.Forms.Label();
@@ -47,17 +43,35 @@
             this.notifyIconMsg = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStripMsg = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.退出ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cboTopMost = new System.Windows.Forms.CheckBox();
-            this.trackBarOpacity = new System.Windows.Forms.TrackBar();
-            this.txtOpacity = new System.Windows.Forms.TextBox();
-            this.btnDownX = new System.Windows.Forms.Button();
             this.contextMenuStripGridView = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.置顶ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.groupBoxInfo1 = new System.Windows.Forms.GroupBox();
+            this.btnDownX = new System.Windows.Forms.Button();
+            this.txtOpacity = new System.Windows.Forms.TextBox();
+            this.trackBarOpacity = new System.Windows.Forms.TrackBar();
+            this.cboTopMost = new System.Windows.Forms.CheckBox();
+            this.btnAllRemove = new System.Windows.Forms.Button();
+            this.btnRemove = new System.Windows.Forms.Button();
+            this.btnAdd = new System.Windows.Forms.Button();
+            this.txtCode = new System.Windows.Forms.TextBox();
+            this.groupBoxGJ = new System.Windows.Forms.GroupBox();
+            this.dataGridView2 = new System.Windows.Forms.DataGridView();
+            this.SysNo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.名称 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.代码 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.涨百 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.跌百 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.涨元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.跌元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStripMsg.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).BeginInit();
             this.contextMenuStripGridView.SuspendLayout();
+            this.groupBoxInfo1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).BeginInit();
+            this.groupBoxGJ.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -103,45 +117,6 @@
             this.btnDown.Text = "︾";
             this.btnDown.UseVisualStyleBackColor = true;
             this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
-            // 
-            // txtCode
-            // 
-            this.txtCode.Location = new System.Drawing.Point(6, 382);
-            this.txtCode.MaxLength = 6;
-            this.txtCode.Name = "txtCode";
-            this.txtCode.Size = new System.Drawing.Size(93, 21);
-            this.txtCode.TabIndex = 4;
-            this.txtCode.Text = "600030";
-            // 
-            // btnAdd
-            // 
-            this.btnAdd.Location = new System.Drawing.Point(104, 382);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(49, 23);
-            this.btnAdd.TabIndex = 5;
-            this.btnAdd.Text = "添加";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
-            // 
-            // btnRemove
-            // 
-            this.btnRemove.Location = new System.Drawing.Point(158, 382);
-            this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(49, 23);
-            this.btnRemove.TabIndex = 6;
-            this.btnRemove.Text = "删除";
-            this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
-            // 
-            // btnAllRemove
-            // 
-            this.btnAllRemove.Location = new System.Drawing.Point(212, 382);
-            this.btnAllRemove.Name = "btnAllRemove";
-            this.btnAllRemove.Size = new System.Drawing.Size(49, 23);
-            this.btnAllRemove.TabIndex = 7;
-            this.btnAllRemove.Text = "全删";
-            this.btnAllRemove.UseVisualStyleBackColor = true;
-            this.btnAllRemove.Click += new System.EventHandler(this.btnAllRemove_Click);
             // 
             // lblSHZS1
             // 
@@ -219,59 +194,15 @@
             this.contextMenuStripMsg.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.退出ToolStripMenuItem});
             this.contextMenuStripMsg.Name = "contextMenuStripMsg";
-            this.contextMenuStripMsg.Size = new System.Drawing.Size(153, 48);
+            this.contextMenuStripMsg.Size = new System.Drawing.Size(101, 26);
             this.contextMenuStripMsg.Text = "退出系统";
             // 
             // 退出ToolStripMenuItem
             // 
             this.退出ToolStripMenuItem.Name = "退出ToolStripMenuItem";
-            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.退出ToolStripMenuItem.Text = "退出";
             this.退出ToolStripMenuItem.Click += new System.EventHandler(this.退出ToolStripMenuItem_Click);
-            // 
-            // cboTopMost
-            // 
-            this.cboTopMost.AutoSize = true;
-            this.cboTopMost.Location = new System.Drawing.Point(159, 422);
-            this.cboTopMost.Name = "cboTopMost";
-            this.cboTopMost.Size = new System.Drawing.Size(48, 16);
-            this.cboTopMost.TabIndex = 14;
-            this.cboTopMost.Text = "置顶";
-            this.cboTopMost.UseVisualStyleBackColor = true;
-            this.cboTopMost.CheckedChanged += new System.EventHandler(this.cboTopMost_CheckedChanged);
-            // 
-            // trackBarOpacity
-            // 
-            this.trackBarOpacity.Location = new System.Drawing.Point(2, 408);
-            this.trackBarOpacity.Maximum = 100;
-            this.trackBarOpacity.Name = "trackBarOpacity";
-            this.trackBarOpacity.Size = new System.Drawing.Size(115, 45);
-            this.trackBarOpacity.TabIndex = 15;
-            this.trackBarOpacity.TickFrequency = 10;
-            this.trackBarOpacity.TickStyle = System.Windows.Forms.TickStyle.Both;
-            this.trackBarOpacity.Value = 33;
-            this.trackBarOpacity.Scroll += new System.EventHandler(this.trackBarOpacity_Scroll);
-            // 
-            // txtOpacity
-            // 
-            this.txtOpacity.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtOpacity.Location = new System.Drawing.Point(115, 422);
-            this.txtOpacity.MaxLength = 3;
-            this.txtOpacity.Name = "txtOpacity";
-            this.txtOpacity.Size = new System.Drawing.Size(33, 14);
-            this.txtOpacity.TabIndex = 16;
-            this.txtOpacity.Text = "100";
-            this.txtOpacity.MouseLeave += new System.EventHandler(this.txtOpacity_MouseLeave);
-            // 
-            // btnDownX
-            // 
-            this.btnDownX.Location = new System.Drawing.Point(212, 419);
-            this.btnDownX.Name = "btnDownX";
-            this.btnDownX.Size = new System.Drawing.Size(49, 23);
-            this.btnDownX.TabIndex = 17;
-            this.btnDownX.Text = "︾";
-            this.btnDownX.UseVisualStyleBackColor = true;
-            this.btnDownX.Click += new System.EventHandler(this.btnDownX_Click);
             // 
             // contextMenuStripGridView
             // 
@@ -279,39 +210,221 @@
             this.置顶ToolStripMenuItem,
             this.删除ToolStripMenuItem});
             this.contextMenuStripGridView.Name = "contextMenuStripGridView";
-            this.contextMenuStripGridView.Size = new System.Drawing.Size(101, 48);
+            this.contextMenuStripGridView.Size = new System.Drawing.Size(153, 70);
             // 
             // 置顶ToolStripMenuItem
             // 
             this.置顶ToolStripMenuItem.Name = "置顶ToolStripMenuItem";
-            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.置顶ToolStripMenuItem.Text = "置顶";
+            this.置顶ToolStripMenuItem.Click += new System.EventHandler(this.置顶ToolStripMenuItem_Click);
             // 
             // 删除ToolStripMenuItem
             // 
             this.删除ToolStripMenuItem.Name = "删除ToolStripMenuItem";
-            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.删除ToolStripMenuItem.Text = "删除";
+            this.删除ToolStripMenuItem.Click += new System.EventHandler(this.删除ToolStripMenuItem_Click);
+            // 
+            // timer1
+            // 
+            this.timer1.Interval = 2000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // groupBoxInfo1
+            // 
+            this.groupBoxInfo1.Controls.Add(this.btnDownX);
+            this.groupBoxInfo1.Controls.Add(this.txtOpacity);
+            this.groupBoxInfo1.Controls.Add(this.trackBarOpacity);
+            this.groupBoxInfo1.Controls.Add(this.cboTopMost);
+            this.groupBoxInfo1.Controls.Add(this.btnAllRemove);
+            this.groupBoxInfo1.Controls.Add(this.btnRemove);
+            this.groupBoxInfo1.Controls.Add(this.btnAdd);
+            this.groupBoxInfo1.Controls.Add(this.txtCode);
+            this.groupBoxInfo1.Location = new System.Drawing.Point(6, 378);
+            this.groupBoxInfo1.Name = "groupBoxInfo1";
+            this.groupBoxInfo1.Size = new System.Drawing.Size(255, 97);
+            this.groupBoxInfo1.TabIndex = 18;
+            this.groupBoxInfo1.TabStop = false;
+            this.groupBoxInfo1.Text = "基础设置";
+            // 
+            // btnDownX
+            // 
+            this.btnDownX.Location = new System.Drawing.Point(202, 59);
+            this.btnDownX.Name = "btnDownX";
+            this.btnDownX.Size = new System.Drawing.Size(49, 23);
+            this.btnDownX.TabIndex = 25;
+            this.btnDownX.Text = "︾";
+            this.btnDownX.UseVisualStyleBackColor = true;
+            this.btnDownX.Click += new System.EventHandler(this.btnDownX_Click);
+            // 
+            // txtOpacity
+            // 
+            this.txtOpacity.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtOpacity.Location = new System.Drawing.Point(111, 64);
+            this.txtOpacity.MaxLength = 3;
+            this.txtOpacity.Name = "txtOpacity";
+            this.txtOpacity.Size = new System.Drawing.Size(33, 14);
+            this.txtOpacity.TabIndex = 24;
+            this.txtOpacity.Text = "100";
+            this.txtOpacity.MouseLeave += new System.EventHandler(this.txtOpacity_MouseLeave);
+            // 
+            // trackBarOpacity
+            // 
+            this.trackBarOpacity.Location = new System.Drawing.Point(-2, 50);
+            this.trackBarOpacity.Maximum = 100;
+            this.trackBarOpacity.Name = "trackBarOpacity";
+            this.trackBarOpacity.Size = new System.Drawing.Size(115, 45);
+            this.trackBarOpacity.TabIndex = 23;
+            this.trackBarOpacity.TickFrequency = 10;
+            this.trackBarOpacity.TickStyle = System.Windows.Forms.TickStyle.Both;
+            this.trackBarOpacity.Value = 33;
+            this.trackBarOpacity.Scroll += new System.EventHandler(this.trackBarOpacity_Scroll);
+            // 
+            // cboTopMost
+            // 
+            this.cboTopMost.AutoSize = true;
+            this.cboTopMost.Location = new System.Drawing.Point(150, 64);
+            this.cboTopMost.Name = "cboTopMost";
+            this.cboTopMost.Size = new System.Drawing.Size(48, 16);
+            this.cboTopMost.TabIndex = 22;
+            this.cboTopMost.Text = "置顶";
+            this.cboTopMost.UseVisualStyleBackColor = true;
+            this.cboTopMost.CheckedChanged += new System.EventHandler(this.cboTopMost_CheckedChanged);
+            // 
+            // btnAllRemove
+            // 
+            this.btnAllRemove.Location = new System.Drawing.Point(202, 24);
+            this.btnAllRemove.Name = "btnAllRemove";
+            this.btnAllRemove.Size = new System.Drawing.Size(49, 23);
+            this.btnAllRemove.TabIndex = 21;
+            this.btnAllRemove.Text = "全删";
+            this.btnAllRemove.UseVisualStyleBackColor = true;
+            this.btnAllRemove.Click += new System.EventHandler(this.btnAllRemove_Click);
+            // 
+            // btnRemove
+            // 
+            this.btnRemove.Location = new System.Drawing.Point(149, 24);
+            this.btnRemove.Name = "btnRemove";
+            this.btnRemove.Size = new System.Drawing.Size(49, 23);
+            this.btnRemove.TabIndex = 20;
+            this.btnRemove.Text = "删除";
+            this.btnRemove.UseVisualStyleBackColor = true;
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            // 
+            // btnAdd
+            // 
+            this.btnAdd.Location = new System.Drawing.Point(95, 24);
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(49, 23);
+            this.btnAdd.TabIndex = 19;
+            this.btnAdd.Text = "添加";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            // 
+            // txtCode
+            // 
+            this.txtCode.Location = new System.Drawing.Point(8, 24);
+            this.txtCode.MaxLength = 6;
+            this.txtCode.Name = "txtCode";
+            this.txtCode.Size = new System.Drawing.Size(81, 21);
+            this.txtCode.TabIndex = 18;
+            this.txtCode.Text = "600030";
+            // 
+            // groupBoxGJ
+            // 
+            this.groupBoxGJ.Controls.Add(this.dataGridView2);
+            this.groupBoxGJ.Location = new System.Drawing.Point(4, 481);
+            this.groupBoxGJ.Name = "groupBoxGJ";
+            this.groupBoxGJ.Size = new System.Drawing.Size(634, 202);
+            this.groupBoxGJ.TabIndex = 19;
+            this.groupBoxGJ.TabStop = false;
+            this.groupBoxGJ.Text = "高级设置";
+            // 
+            // dataGridView2
+            // 
+            this.dataGridView2.AllowUserToAddRows = false;
+            this.dataGridView2.AllowUserToDeleteRows = false;
+            this.dataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView2.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.SysNo,
+            this.名称,
+            this.代码,
+            this.涨百,
+            this.跌百,
+            this.涨元,
+            this.跌元});
+            this.dataGridView2.Location = new System.Drawing.Point(6, 18);
+            this.dataGridView2.Name = "dataGridView2";
+            this.dataGridView2.RowTemplate.Height = 23;
+            this.dataGridView2.Size = new System.Drawing.Size(622, 178);
+            this.dataGridView2.TabIndex = 0;
+            this.dataGridView2.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView2_CellEndEdit);
+            this.dataGridView2.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView2_CellMouseDown);
+            // 
+            // SysNo
+            // 
+            this.SysNo.DataPropertyName = "SysNo";
+            this.SysNo.HeaderText = "SysNo";
+            this.SysNo.Name = "SysNo";
+            this.SysNo.ReadOnly = true;
+            this.SysNo.Visible = false;
+            // 
+            // 名称
+            // 
+            this.名称.ContextMenuStrip = this.contextMenuStripGridView;
+            this.名称.DataPropertyName = "name";
+            this.名称.HeaderText = "名称";
+            this.名称.Name = "名称";
+            // 
+            // 代码
+            // 
+            this.代码.ContextMenuStrip = this.contextMenuStripGridView;
+            this.代码.DataPropertyName = "code";
+            this.代码.HeaderText = "代码";
+            this.代码.Name = "代码";
+            // 
+            // 涨百
+            // 
+            this.涨百.ContextMenuStrip = this.contextMenuStripGridView;
+            this.涨百.DataPropertyName = "ZFB";
+            this.涨百.HeaderText = "涨百";
+            this.涨百.Name = "涨百";
+            // 
+            // 跌百
+            // 
+            this.跌百.ContextMenuStrip = this.contextMenuStripGridView;
+            this.跌百.DataPropertyName = "DFB";
+            this.跌百.HeaderText = "跌百";
+            this.跌百.Name = "跌百";
+            // 
+            // 涨元
+            // 
+            this.涨元.ContextMenuStrip = this.contextMenuStripGridView;
+            this.涨元.DataPropertyName = "ZFY";
+            this.涨元.HeaderText = "涨元";
+            this.涨元.Name = "涨元";
+            // 
+            // 跌元
+            // 
+            this.跌元.ContextMenuStrip = this.contextMenuStripGridView;
+            this.跌元.DataPropertyName = "DFY";
+            this.跌元.HeaderText = "跌元";
+            this.跌元.Name = "跌元";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(264, 372);
-            this.Controls.Add(this.btnDownX);
-            this.Controls.Add(this.txtOpacity);
-            this.Controls.Add(this.trackBarOpacity);
-            this.Controls.Add(this.cboTopMost);
+            this.ClientSize = new System.Drawing.Size(643, 695);
+            this.Controls.Add(this.groupBoxGJ);
+            this.Controls.Add(this.groupBoxInfo1);
             this.Controls.Add(this.lblSZZS3);
             this.Controls.Add(this.lblSZZS2);
             this.Controls.Add(this.lblSHZS3);
             this.Controls.Add(this.lblSHZS2);
             this.Controls.Add(this.lblSZZS1);
             this.Controls.Add(this.lblSHZS1);
-            this.Controls.Add(this.btnAllRemove);
-            this.Controls.Add(this.btnRemove);
-            this.Controls.Add(this.btnAdd);
-            this.Controls.Add(this.txtCode);
             this.Controls.Add(this.btnDown);
             this.Controls.Add(this.btnRight);
             this.Controls.Add(this.btnSelect);
@@ -329,8 +442,12 @@
             this.Leave += new System.EventHandler(this.Form1_Leave);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.contextMenuStripMsg.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).EndInit();
             this.contextMenuStripGridView.ResumeLayout(false);
+            this.groupBoxInfo1.ResumeLayout(false);
+            this.groupBoxInfo1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).EndInit();
+            this.groupBoxGJ.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -342,10 +459,6 @@
         private System.Windows.Forms.Button btnSelect;
         private System.Windows.Forms.Button btnRight;
         private System.Windows.Forms.Button btnDown;
-        private System.Windows.Forms.TextBox txtCode;
-        private System.Windows.Forms.Button btnAdd;
-        private System.Windows.Forms.Button btnRemove;
-        private System.Windows.Forms.Button btnAllRemove;
         private System.Windows.Forms.Label lblSHZS1;
         private System.Windows.Forms.Label lblSZZS1;
         private System.Windows.Forms.Label lblSHZS2;
@@ -355,13 +468,28 @@
         private System.Windows.Forms.NotifyIcon notifyIconMsg;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripMsg;
         private System.Windows.Forms.ToolStripMenuItem 退出ToolStripMenuItem;
-        private System.Windows.Forms.CheckBox cboTopMost;
-        private System.Windows.Forms.TrackBar trackBarOpacity;
-        private System.Windows.Forms.TextBox txtOpacity;
-        private System.Windows.Forms.Button btnDownX;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripGridView;
         private System.Windows.Forms.ToolStripMenuItem 置顶ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 删除ToolStripMenuItem;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.GroupBox groupBoxInfo1;
+        private System.Windows.Forms.Button btnDownX;
+        private System.Windows.Forms.TextBox txtOpacity;
+        private System.Windows.Forms.TrackBar trackBarOpacity;
+        private System.Windows.Forms.CheckBox cboTopMost;
+        private System.Windows.Forms.Button btnAllRemove;
+        private System.Windows.Forms.Button btnRemove;
+        private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.TextBox txtCode;
+        private System.Windows.Forms.GroupBox groupBoxGJ;
+        private System.Windows.Forms.DataGridView dataGridView2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn SysNo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn 名称;
+        private System.Windows.Forms.DataGridViewTextBoxColumn 代码;
+        private System.Windows.Forms.DataGridViewTextBoxColumn 涨百;
+        private System.Windows.Forms.DataGridViewTextBoxColumn 跌百;
+        private System.Windows.Forms.DataGridViewTextBoxColumn 涨元;
+        private System.Windows.Forms.DataGridViewTextBoxColumn 跌元;
     }
 }
 

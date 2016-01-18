@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--股票预警 涨幅百分比|跌幅百分比|涨幅元|跌幅元-->
+<Root>
+  <GPDM Code="sh600030" Name="AAAA">
+    <!--涨幅百分比-->
+    <ZFB></ZFB>
+    <!--跌幅百分比-->
+    <DFB></DFB>
+    <!--涨幅元-->
+    <ZFY></ZFY>
+    <!--跌幅元-->
+    <DFY></DFY>
+  </GPDM>
+</Root>

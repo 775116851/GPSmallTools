@@ -105,6 +105,10 @@
     <Content Include="3rdParty\LitJSON.dll" />
     <Content Include="3rdParty\log4net.dll" />
     <Content Include="3rdParty\Newtonsoft.Json.Net20.dll" />
+    <Content Include="App_Data\GPYJ.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Images\feng_16px.ico" />
     <Content Include="Images\feng_24px.ico" />
   </ItemGroup>
