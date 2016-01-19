@@ -84,7 +84,8 @@
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowTemplate.DefaultCellStyle.BackColor = System.Drawing.Color.White;
-            this.dataGridView1.Size = new System.Drawing.Size(270, 269);
+            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridView1.Size = new System.Drawing.Size(968, 269);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.RowPrePaint += new System.Windows.Forms.DataGridViewRowPrePaintEventHandler(this.dataGridView1_RowPrePaint);
             // 
@@ -210,19 +211,19 @@
             this.置顶ToolStripMenuItem,
             this.删除ToolStripMenuItem});
             this.contextMenuStripGridView.Name = "contextMenuStripGridView";
-            this.contextMenuStripGridView.Size = new System.Drawing.Size(153, 70);
+            this.contextMenuStripGridView.Size = new System.Drawing.Size(101, 48);
             // 
             // 置顶ToolStripMenuItem
             // 
             this.置顶ToolStripMenuItem.Name = "置顶ToolStripMenuItem";
-            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.置顶ToolStripMenuItem.Text = "置顶";
             this.置顶ToolStripMenuItem.Click += new System.EventHandler(this.置顶ToolStripMenuItem_Click);
             // 
             // 删除ToolStripMenuItem
             // 
             this.删除ToolStripMenuItem.Name = "删除ToolStripMenuItem";
-            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.删除ToolStripMenuItem.Text = "删除";
             this.删除ToolStripMenuItem.Click += new System.EventHandler(this.删除ToolStripMenuItem_Click);
             // 
@@ -334,9 +335,9 @@
             // groupBoxGJ
             // 
             this.groupBoxGJ.Controls.Add(this.dataGridView2);
-            this.groupBoxGJ.Location = new System.Drawing.Point(4, 481);
+            this.groupBoxGJ.Location = new System.Drawing.Point(273, 346);
             this.groupBoxGJ.Name = "groupBoxGJ";
-            this.groupBoxGJ.Size = new System.Drawing.Size(634, 202);
+            this.groupBoxGJ.Size = new System.Drawing.Size(701, 129);
             this.groupBoxGJ.TabIndex = 19;
             this.groupBoxGJ.TabStop = false;
             this.groupBoxGJ.Text = "高级设置";
@@ -357,7 +358,8 @@
             this.dataGridView2.Location = new System.Drawing.Point(6, 18);
             this.dataGridView2.Name = "dataGridView2";
             this.dataGridView2.RowTemplate.Height = 23;
-            this.dataGridView2.Size = new System.Drawing.Size(622, 178);
+            this.dataGridView2.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridView2.Size = new System.Drawing.Size(689, 105);
             this.dataGridView2.TabIndex = 0;
             this.dataGridView2.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView2_CellEndEdit);
             this.dataGridView2.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView2_CellMouseDown);
@@ -365,6 +367,7 @@
             // SysNo
             // 
             this.SysNo.DataPropertyName = "SysNo";
+            this.SysNo.Frozen = true;
             this.SysNo.HeaderText = "SysNo";
             this.SysNo.Name = "SysNo";
             this.SysNo.ReadOnly = true;
@@ -374,6 +377,7 @@
             // 
             this.名称.ContextMenuStrip = this.contextMenuStripGridView;
             this.名称.DataPropertyName = "name";
+            this.名称.Frozen = true;
             this.名称.HeaderText = "名称";
             this.名称.Name = "名称";
             // 
@@ -390,6 +394,7 @@
             this.涨百.DataPropertyName = "ZFB";
             this.涨百.HeaderText = "涨百";
             this.涨百.Name = "涨百";
+            this.涨百.Width = 103;
             // 
             // 跌百
             // 
@@ -397,6 +402,7 @@
             this.跌百.DataPropertyName = "DFB";
             this.跌百.HeaderText = "跌百";
             this.跌百.Name = "跌百";
+            this.跌百.Width = 103;
             // 
             // 涨元
             // 
@@ -404,6 +410,7 @@
             this.涨元.DataPropertyName = "ZFY";
             this.涨元.HeaderText = "涨元";
             this.涨元.Name = "涨元";
+            this.涨元.Width = 120;
             // 
             // 跌元
             // 
@@ -411,12 +418,13 @@
             this.跌元.DataPropertyName = "DFY";
             this.跌元.HeaderText = "跌元";
             this.跌元.Name = "跌元";
+            this.跌元.Width = 120;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(643, 695);
+            this.ClientSize = new System.Drawing.Size(984, 695);
             this.Controls.Add(this.groupBoxGJ);
             this.Controls.Add(this.groupBoxInfo1);
             this.Controls.Add(this.lblSZZS3);

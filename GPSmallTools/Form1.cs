@@ -15,6 +15,7 @@ using log4net;
 using System.Configuration;
 using System.Threading;
 using System.Xml;
+using System.Web.Caching;
 
 namespace GPSmallTools
 {
@@ -24,6 +25,7 @@ namespace GPSmallTools
         //http://www.21andy.com/new/20090530/1313.html
         //https://api.wmcloud.com/docs/pages/viewpage.action?pageId=1867781
         //http://tushare.org/datayes.html#id2
+        //sz000789,sh600030,sz002673,sh601872,sh601727,sh600067,sz000709
         public Form1()
         {
             InitializeComponent();
@@ -31,11 +33,11 @@ namespace GPSmallTools
         private ILog log = log4net.LogManager.GetLogger(typeof(Form1));
         private void Form1_Load(object sender, EventArgs e)
         {
-            bool isPass = GetAPIDataPushGPYJ();
-            GetGPYJList();
             //log.Info("呵呵");
             BindConfig();
             Show(1);
+
+            //GetAPIDataPushGPYJ();
         }
 
         //基础数据绑定
@@ -111,29 +113,50 @@ namespace GPSmallTools
                         string sGSList = Convert.ToString(jContent["stockinfo"]);//上市公司列表
                         string sDPList = Convert.ToString(jContent["market"]);//上证,深证
                         int mGSCount = jContent["stockinfo"].AsQueryable().Count();
+                        //涨跌判断
+                        List<APIStock> listGPYJ = GetGPYJList();
                         for (int i = 0; i < mGSCount; i++)
                         {
                             APIStock stock = new APIStock();
                             JObject jStock = (JObject)jContent["stockinfo"][i];
                             stock.name = Convert.ToString(jStock["name"]).Trim('"');
-                            stock.code = Convert.ToString(jStock["code"]).Trim('"').Substring(2); ;
+                            if (string.IsNullOrEmpty(stock.name))
+                            {
+                                continue;
+                            }
+                            stock.SysNo = Convert.ToString(jStock["code"]).Trim('"');
+                            stock.currentPrice = Convert.ToString(jStock["currentPrice"]);
+                            string mIncrease = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));//涨跌幅
+                            if(listGPYJ != null && listGPYJ.Count > 0)
+                            {
+                                var mGP = (from t in listGPYJ where t.SysNo == stock.SysNo && t.ISYJ == 1 select t).ToList();
+                                if(mGP.Count > 0)
+                                {
+                                    string returnMsg = PriceYJ(stock.currentPrice, mIncrease, mGP[0]);
+                                    if(!string.IsNullOrEmpty(returnMsg))
+                                    {
+                                        this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
+                                    }
+                                }
+                            }
+                            stock.name = Convert.ToString(jStock["name"]).Trim('"');
+                            stock.code = Convert.ToString(jStock["code"]).Trim('"').Substring(2);
                             stock.date = jStock["time"].ToString().Trim('"');
                             stock.openningPrice = Convert.ToString(jStock["OpenningPrice"]);
                             stock.closingPrice = Convert.ToString(jStock["closingPrice"]);
                             stock.hPrice = Convert.ToString(jStock["hPrice"]);
                             stock.lPrice = Convert.ToString(jStock["lPrice"]);
-                            stock.currentPrice = Convert.ToString(jStock["currentPrice"]);
+                            
                             //stock.growth = Convert.ToString(jStock["growth"]);
                             //stock.growthPercent = Convert.ToString(jStock["growthPercent"]);
                             //stock.dealnumber = Convert.ToString(jStock["dealnumber"]);
-                            stock.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jStock["turnover"].ToString())/100000000, 2, MidpointRounding.AwayFromZero));
+                            stock.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jStock["turnover"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
                             //stock.hPrice52 = Convert.ToString(jStock["52hPrice"]);
                             //stock.lPrice52 = Convert.ToString(jStock["52lPrice"]);
 
                             stock.competitivePrice = Convert.ToString(jStock["competitivePrice"]);
                             stock.auctionPrice = Convert.ToString(jStock["auctionPrice"]);
                             stock.totalNumber = Convert.ToString(Math.Round(Convert.ToDouble(jStock["totalNumber"].ToString())/1000000, 2, MidpointRounding.AwayFromZero));
-                            string mIncrease = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));//涨跌幅
                             stock.increase = (mIncrease.Substring(0, 1) == "-") ? mIncrease.Substring(1) : mIncrease;
                             listStock.Add(stock);
                         }
@@ -235,6 +258,7 @@ namespace GPSmallTools
             col1.Name = "name";
             col1.Width = 80;
             col1.ReadOnly = true;
+            col1.Frozen = true;
             //col1.ContextMenuStrip = contextMenuStripGridView;
             dataGridView1.Columns.Insert(0, col1); 
             DataGridViewTextBoxColumn col3 = new DataGridViewTextBoxColumn();
@@ -463,8 +487,19 @@ namespace GPSmallTools
         {
             if (btnDownX.Text.Trim() == "︾")
             {
-                this.Height = 630;
+                this.Height = 730;
                 btnDownX.Text = "︽";
+                //GetAPIDataPushGPYJ();
+                Cache cache = System.Web.HttpRuntime.Cache;
+                List<APIStock> listYJ = (List<APIStock>)cache.Get("MGPYJ");
+                if (listYJ != null && listYJ.Count > 0)
+                {
+                    listYJ = GetGPYJList();
+                }
+                dataGridView2.AutoGenerateColumns = false;
+                dataGridView2.Columns[0].ReadOnly = true;
+                dataGridView2.Columns[1].ReadOnly = true;
+                dataGridView2.DataSource = listYJ;
             }
             else
             {
@@ -871,8 +906,20 @@ namespace GPSmallTools
         }
 
         #region 预警相关
+        //预警配置文件API更新(停用)
         private bool GetAPIDataPushGPYJ()
         {
+            Cache cache = System.Web.HttpRuntime.Cache;
+            List<APIStock> listYJ = (List<APIStock>)cache.Get("MGPYJ");
+            if (listYJ != null && listYJ.Count > 0)
+            {
+                dataGridView2.AutoGenerateColumns = false;
+                dataGridView2.Columns[0].ReadOnly = true;
+                dataGridView2.Columns[1].ReadOnly = true;
+                dataGridView2.DataSource = listYJ;
+                return true;
+            }
+
             string sUrl = Convert.ToString(ConfigurationManager.AppSettings["GPURL"]);
             string stockidList = ConfigurationManager.AppSettings["GPPamamList"].Trim();
             if (string.IsNullOrEmpty(stockidList))
@@ -903,17 +950,20 @@ namespace GPSmallTools
                         string sDPList = Convert.ToString(jContent["market"]);//上证,深证
                         int mGSCount = jContent["stockinfo"].AsQueryable().Count();
 
-                        XmlDocument GridXml = new XmlDocument();
-                        GridXml.Load(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
-                        XmlNode root = GridXml.SelectSingleNode("Root");
+                        XmlDocument GridXmlX = new XmlDocument();
+                        GridXmlX.Load(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+                        XmlNode rootX = GridXmlX.SelectSingleNode("Root");
                         for (int i = 0; i < mGSCount; i++)
                         {
                             APIStock stock = new APIStock();
                             JObject jStock = (JObject)jContent["stockinfo"][i];
                             string name = Convert.ToString(jStock["name"]).Trim('"');
                             string code = Convert.ToString(jStock["code"]).Trim('"');
-
-                            XmlNode GridNode = GridXml.DocumentElement.SelectSingleNode("//GPDM[@Code='" + code + "']");
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                continue;
+                            }
+                            XmlNode GridNode = GridXmlX.DocumentElement.SelectSingleNode("//GPDM[@Code='" + code + "']");
                             if (GridNode != null)//存在节点仅修改名称
                             {
                                 XmlElement GridElement = (XmlElement)GridNode;
@@ -921,22 +971,22 @@ namespace GPSmallTools
                             }
                             else
                             {
-                                XmlElement oneGPDM = GridXml.CreateElement("GPDM");
+                                XmlElement oneGPDM = GridXmlX.CreateElement("GPDM");
                                 oneGPDM.SetAttribute("Code", code);
                                 oneGPDM.SetAttribute("Name", name);
-                                XmlElement twoZFB = GridXml.CreateElement("ZFB");
-                                twoZFB.InnerText = "5";
+                                XmlElement twoZFB = GridXmlX.CreateElement("ZFB");
+                                //twoZFB.InnerText = "5";
                                 oneGPDM.AppendChild(twoZFB);
-                                XmlElement twoDFB = GridXml.CreateElement("DFB");
+                                XmlElement twoDFB = GridXmlX.CreateElement("DFB");
                                 oneGPDM.AppendChild(twoDFB);
-                                XmlElement twoZFY = GridXml.CreateElement("ZFY");
+                                XmlElement twoZFY = GridXmlX.CreateElement("ZFY");
                                 oneGPDM.AppendChild(twoZFY);
-                                XmlElement twoDFY = GridXml.CreateElement("DFY");
+                                XmlElement twoDFY = GridXmlX.CreateElement("DFY");
                                 oneGPDM.AppendChild(twoDFY);
-                                root.AppendChild(oneGPDM);
+                                rootX.AppendChild(oneGPDM);
                             }
                         }
-                        GridXml.Save(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+                        GridXmlX.Save(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
                     }
                 }
                 else if (!Enum.IsDefined(typeof(ErrorCode), mReturnCode))
@@ -954,10 +1004,17 @@ namespace GPSmallTools
                 this.Text = "返回数据空";
                 return false;
             }
+
+            listYJ = GetGPYJList();
+            dataGridView2.AutoGenerateColumns = false;
+            dataGridView2.Columns[0].ReadOnly = true;
+            dataGridView2.Columns[1].ReadOnly = true;
+            dataGridView2.DataSource = listYJ;
             return true;
         }
 
-        private void GetGPYJList()
+        //预警列表(停用)
+        private void GetGPYJListM()
         {
             List<APIStock> listYJ = new List<APIStock>();
             XmlDocument GridXml = new XmlDocument();
@@ -991,11 +1048,156 @@ namespace GPSmallTools
             //}
             if(listYJ.Count > 0)
             {
+                Cache c = System.Web.HttpRuntime.Cache;
+                CacheDependency cdd = new CacheDependency(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "GPSmallTools.exe.Config"));
+                c.Insert("MGPYJ", listYJ, cdd, System.DateTime.UtcNow.AddHours(1), System.Web.Caching.Cache.NoSlidingExpiration);
+
                 dataGridView2.AutoGenerateColumns = false;
                 dataGridView2.Columns[0].ReadOnly = true;
                 dataGridView2.Columns[1].ReadOnly = true;
                 dataGridView2.DataSource = listYJ;
             }
+        }
+
+        //预警列表
+        private List<APIStock> GetGPYJList()
+        {
+            List<APIStock> listYJ = new List<APIStock>();
+            Cache cache = System.Web.HttpRuntime.Cache;
+            listYJ = (List<APIStock>)cache.Get("MGPYJ");
+            if (listYJ != null && listYJ.Count > 0)
+            {
+                return listYJ;
+            }
+
+            #region 预警配置文件API更新
+            string sUrl = Convert.ToString(ConfigurationManager.AppSettings["GPURL"]);
+            string stockidList = ConfigurationManager.AppSettings["GPPamamList"].Trim();
+            if (string.IsNullOrEmpty(stockidList))
+            {
+                MessageBox.Show("请先添加股票");
+                return null;
+            }
+            string sParam = "stockid=" + stockidList + "&list=1";
+            string sMessage = HttpGet(sUrl, sParam);
+            if (!string.IsNullOrEmpty(sMessage))
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(sMessage);
+                string sReturnCode = Convert.ToString(jo["errNum"]);
+                string sReturnMsg = Convert.ToString(jo["errMsg"]);
+                if (string.IsNullOrEmpty(sReturnCode))
+                {
+                    this.Text = "请求异常";
+                    return null;
+                }
+                int mReturnCode = Convert.ToInt32(sReturnCode);
+                if (mReturnCode == (int)ErrorCode.Success)
+                {
+                    string sReturnContent = Convert.ToString(jo["retData"]);
+                    if (!string.IsNullOrEmpty(sReturnContent))
+                    {
+                        JObject jContent = (JObject)JsonConvert.DeserializeObject(sReturnContent);
+                        string sGSList = Convert.ToString(jContent["stockinfo"]);//上市公司列表
+                        string sDPList = Convert.ToString(jContent["market"]);//上证,深证
+                        int mGSCount = jContent["stockinfo"].AsQueryable().Count();
+
+                        XmlDocument GridXmlX = new XmlDocument();
+                        GridXmlX.Load(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+                        XmlNode rootX = GridXmlX.SelectSingleNode("Root");
+                        for (int i = 0; i < mGSCount; i++)
+                        {
+                            APIStock stock = new APIStock();
+                            JObject jStock = (JObject)jContent["stockinfo"][i];
+                            string name = Convert.ToString(jStock["name"]).Trim('"');
+                            string code = Convert.ToString(jStock["code"]).Trim('"');
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                continue;
+                            }
+                            XmlNode GridNode = GridXmlX.DocumentElement.SelectSingleNode("//GPDM[@Code='" + code + "']");
+                            if (GridNode != null)//存在节点仅修改名称
+                            {
+                                XmlElement GridElement = (XmlElement)GridNode;
+                                GridElement.SetAttribute("Name", name);
+                            }
+                            else
+                            {
+                                XmlElement oneGPDM = GridXmlX.CreateElement("GPDM");
+                                oneGPDM.SetAttribute("Code", code);
+                                oneGPDM.SetAttribute("Name", name);
+                                XmlElement twoZFB = GridXmlX.CreateElement("ZFB");
+                                //twoZFB.InnerText = "5";
+                                oneGPDM.AppendChild(twoZFB);
+                                XmlElement twoDFB = GridXmlX.CreateElement("DFB");
+                                oneGPDM.AppendChild(twoDFB);
+                                XmlElement twoZFY = GridXmlX.CreateElement("ZFY");
+                                oneGPDM.AppendChild(twoZFY);
+                                XmlElement twoDFY = GridXmlX.CreateElement("DFY");
+                                oneGPDM.AppendChild(twoDFY);
+                                rootX.AppendChild(oneGPDM);
+                            }
+                        }
+                        GridXmlX.Save(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+                    }
+                }
+                else if (!Enum.IsDefined(typeof(ErrorCode), mReturnCode))
+                {
+                    this.Text = "返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg;
+                    return null;
+                }
+                else
+                {
+                    MessageBox.Show(GetDescription(typeof(ErrorCode), mReturnCode));
+                }
+            }
+            else
+            {
+                this.Text = "返回数据空";
+                return null;
+            }
+            #endregion
+
+            #region 根据配置文件获取集合
+            listYJ = new List<APIStock>();
+            XmlDocument GridXml = new XmlDocument();
+            GridXml.Load(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+            XmlNode root = GridXml.SelectSingleNode("Root");
+            XmlElement rootElement = (XmlElement)root;
+
+            string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]).Trim();
+            string[] YYCodes = YYCode.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string mCode in YYCodes)
+            {
+                XmlNode GridNode = GridXml.DocumentElement.SelectSingleNode("//GPDM[@Code='" + mCode + "']");
+                if (GridNode != null)//存在节点仅修改名称
+                {
+                    XmlElement oneElement = (XmlElement)GridNode;
+                    APIStock stock = new APIStock();
+                    stock.SysNo = oneElement.Attributes["Code"].Value;
+                    stock.name = oneElement.Attributes["Name"].Value;
+                    stock.code = oneElement.Attributes["Code"].Value.Substring(2);
+                    stock.ZFB = oneElement.SelectSingleNode("ZFB").InnerText;
+                    stock.DFB = oneElement.SelectSingleNode("DFB").InnerText;
+                    stock.ZFY = oneElement.SelectSingleNode("ZFY").InnerText;
+                    stock.DFY = oneElement.SelectSingleNode("DFY").InnerText;
+                    stock.ISYJ = 0;
+                    if (!string.IsNullOrEmpty(stock.ZFB) || !string.IsNullOrEmpty(stock.DFB) || !string.IsNullOrEmpty(stock.ZFY) || !string.IsNullOrEmpty(stock.DFY))
+                    {
+                        stock.ISYJ = 1;//价格预警
+                    }
+                    listYJ.Add(stock);
+                }
+            }
+            //XmlNodeList ColumnList = rootElement.SelectNodes("GPDM");
+            //for (int i = 0; i < ColumnList.Count;i++ )
+            //{
+            //    XmlElement oneElement = (XmlElement)ColumnList[i];
+            //}
+            CacheDependency cdd = new CacheDependency(new string[] { Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "GPSmallTools.exe.Config"), Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml") });
+            cache.Insert("MGPYJ", listYJ, cdd, System.DateTime.UtcNow.AddHours(1), System.Web.Caching.Cache.NoSlidingExpiration);//级联缓存(指定配置文件发生修改时，触发缓存清空)
+            #endregion
+
+            return listYJ;
         }
 
         //预警编辑
@@ -1064,26 +1266,13 @@ namespace GPSmallTools
                 {
                     dataGridView2.ClearSelection();
                     dataGridView2.Rows[e.RowIndex].Selected = true;
-                    dataGridView2.CurrentCell = dataGridView2.Rows[e.RowIndex].Cells[e.ColumnIndex];
-
+                    if (e.ColumnIndex >= 0)
+                    {
+                        dataGridView2.CurrentCell = dataGridView2.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                    }
                 }
             }
         }
-
-        //保存XML节点
-        private void SaveXML(string Code, string AttributesName, string AttributesValue)
-        {
-            XmlDocument GridXml = new XmlDocument();
-            GridXml.Load(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
-            XmlNode root = GridXml.SelectSingleNode("Root");
-            XmlNode GridNode = GridXml.DocumentElement.SelectSingleNode("//GPDM[@Code='" + Code + "']");
-            if (GridNode != null)//存在节点仅修改名称
-            {
-                GridNode.SelectSingleNode(AttributesName).InnerText = AttributesValue;
-            }
-            GridXml.Save(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
-        }
-        #endregion
 
         private void 置顶ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1124,9 +1313,127 @@ namespace GPSmallTools
 
         private void 删除ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            string mCode = Convert.ToString(this.dataGridView2.SelectedRows[0].Cells[0].Value);
+            string YYCode = Convert.ToString(ConfigurationManager.AppSettings["GPPamamList"]).Trim();
+            if (YYCode.Contains(mCode))
+            {
+                int a = YYCode.ToUpper().IndexOf(mCode.ToUpper());
+                string sT = "";
+                string eT = "";
+                if (a <= 0)//首
+                {
+                    sT = "";
+                    eT = YYCode.Substring(9);
+                }
+                else if (a + 9 >= YYCode.Length)//尾
+                {
+                    sT = "";
+                    eT = YYCode.Substring(0, a - 1);
+                }
+                else
+                {
+                    sT = YYCode.Substring(0, a);
+                    eT = YYCode.Substring(a + 9);
+                }
+                YYCode = sT + eT;
+                UpdateAppConfig("GPPamamList", YYCode);
+                this.notifyIconMsg.ShowBalloonTip(3000, "消息提醒", "删除成功", ToolTipIcon.Info);
+            }
+            else
+            {
+                this.notifyIconMsg.ShowBalloonTip(3000, "消息提醒", "删除失败", ToolTipIcon.Error);
+                return;
+            }
+            Show(1);
+            GetGPYJList();
         }
 
+        //保存XML节点
+        private void SaveXML(string Code, string AttributesName, string AttributesValue)
+        {
+            XmlDocument GridXml = new XmlDocument();
+            GridXml.Load(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+            XmlNode root = GridXml.SelectSingleNode("Root");
+            XmlNode GridNode = GridXml.DocumentElement.SelectSingleNode("//GPDM[@Code='" + Code + "']");
+            if (GridNode != null)//存在节点仅修改名称
+            {
+                GridNode.SelectSingleNode(AttributesName).InnerText = AttributesValue;
+            }
+            GridXml.Save(Path.GetFullPath(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "App_Data/GPYJ.xml")));
+        }
+
+        /// <summary>
+        /// 价格判断
+        /// </summary>
+        /// <param name="currentPrice">当前价</param>
+        /// <param name="increase">当前涨幅</param>
+        /// <param name="stock">预警对象</param>
+        /// <returns>提醒信息</returns>
+        private string PriceYJ(string currentPrice, string increase, APIStock stock)
+        {
+            string returnMsg = "";
+            //先价格后涨幅
+            if (string.IsNullOrEmpty(currentPrice) || string.IsNullOrEmpty(increase) || string.IsNullOrEmpty(stock.SysNo))
+            {
+                return returnMsg;
+            }
+            double CurrentPrice = Convert.ToDouble(currentPrice);//当前价
+            double Increase = Convert.ToDouble(increase);//当前涨幅
+            string sZFB = stock.ZFB;//涨幅百分比
+            string sDFB = stock.DFB;//跌幅百分比
+            string sZFY = stock.ZFY;//涨幅元
+            string sDFY = stock.DFY;//跌幅元
+            if(!string.IsNullOrEmpty(sZFY))
+            {
+                double ZFY = 0.0;
+                if (double.TryParse(sZFY, out ZFY) == true)
+                {
+                    if (CurrentPrice >= ZFY)
+                    {
+                        returnMsg = "当前股票:" + stock.name + " 的价格已涨到预警价:" + ZFY + "元";
+                        return returnMsg;
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(sDFY))
+            {
+                double DFY = 0.0;
+                if (double.TryParse(sDFY, out DFY) == true)
+                {
+                    if (CurrentPrice <= DFY)
+                    {
+                        returnMsg = "当前股票:" + stock.name + " 的价格已跌到预警价:" + DFY + "元";
+                        return returnMsg;
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(sZFB))
+            {
+                double ZFB = 0.0;
+                if (double.TryParse(sZFB, out ZFB) == true)
+                {
+                    if (Increase >= ZFB)
+                    {
+                        returnMsg = "当前股票:" + stock.name + " 的幅度已涨到预警涨幅:" + ZFB + "%";
+                        return returnMsg;
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(sDFB))
+            {
+                double DFB = 0.0;
+                if (double.TryParse(sDFB, out DFB) == true)
+                {
+                    if (Increase <= DFB)
+                    {
+                        returnMsg = "当前股票:" + stock.name + " 的幅度已跌到预警跌幅:" + DFB + "%";
+                        return returnMsg;
+                    }
+                }
+            }
+            return returnMsg;
+        }
+        #endregion
         
     }
 
@@ -1187,6 +1494,7 @@ namespace GPSmallTools
         public string DFB { get; set; }
         public string ZFY { get; set; }
         public string DFY { get; set; }
+        public int ISYJ { get; set; }//是否有预警 1是
     }
 
     //大盘类
