@@ -19,6 +19,15 @@ using System.Web.Caching;
 
 namespace GPSmallTools
 {
+    public enum ErrorTitleType : int
+    {
+        [Description("股价提醒")]
+        GJMsg = 0,
+        [Description("消息提醒")]
+        PTMsg = 1,
+        [Description("错误提醒")]
+        CWMsg = 2
+    }
     public partial class Form1 : Form
     {
         //https://www.showapi.com/api/lookPoint/131/45
@@ -31,6 +40,8 @@ namespace GPSmallTools
             InitializeComponent();
         }
         private ILog log = log4net.LogManager.GetLogger(typeof(Form1));
+        public static Queue<ErrorMsg> queueMsgList = new Queue<ErrorMsg>();
+        
         private void Form1_Load(object sender, EventArgs e)
         {
             //log.Info("呵呵");
@@ -38,6 +49,46 @@ namespace GPSmallTools
             Show(1);
 
             //GetAPIDataPushGPYJ();
+
+            //消息队列
+            Thread tMsg = new Thread(OutMsg);
+            tMsg.Start();
+        }
+
+        //消息提醒
+        private void OutMsg()
+        {
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        if (queueMsgList.Count > 0)
+                        {
+                            //从队列中拿出数据
+                            ErrorMsg eMsg = queueMsgList.Dequeue();
+                            this.notifyIconMsg.ShowBalloonTip(eMsg.ShowTime, GetDescription(typeof(ErrorTitleType),Convert.ToInt32(eMsg.TitleType)), eMsg.Content, eMsg.ToolTripType);
+                            Thread.Sleep(eMsg.ShowTime);
+                        }
+                        else
+                        {
+                            Thread.Sleep(30);//避免了CPU空转。
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorMsg eMsg = new ErrorMsg();
+                        eMsg.TitleType = (int)ErrorTitleType.CWMsg;
+                        eMsg.Content = ex.Message;
+                        eMsg.CreateTime = DateTime.Now;
+                        eMsg.ShowTime = 4000;
+                        eMsg.ToolTripType = ToolTipIcon.Error;
+                        queueMsgList.Enqueue(eMsg);
+                        log.Error(string.Format("读取队列数据异常,异常信息:{0} ;异常详情:{1}", ex.Message, ex));
+                    }
+                }
+            });
         }
 
         //基础数据绑定
@@ -59,7 +110,7 @@ namespace GPSmallTools
             //透明度
             string sOpacity = Convert.ToString(ConfigurationManager.AppSettings["GPOpacity"]);
             int mOpacity = 0;
-            if (string.IsNullOrEmpty(sOpacity) || int.TryParse(sOpacity, out mOpacity) == false || mOpacity > 100 || mOpacity < 30)
+            if (string.IsNullOrEmpty(sOpacity) || int.TryParse(sOpacity, out mOpacity) == false || mOpacity > 100 || mOpacity < 20)
             {
                 trackBarOpacity.Value = 100;
                 txtOpacity.Text = "100";
@@ -135,7 +186,14 @@ namespace GPSmallTools
                                     string returnMsg = PriceYJ(stock.currentPrice, mIncrease, mGP[0]);
                                     if(!string.IsNullOrEmpty(returnMsg))
                                     {
-                                        this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
+                                        ErrorMsg eMsg = new ErrorMsg();
+                                        eMsg.TitleType = (int)ErrorTitleType.GJMsg;
+                                        eMsg.Content = returnMsg;
+                                        eMsg.CreateTime = DateTime.Now;
+                                        eMsg.ShowTime = 5000;
+                                        eMsg.ToolTripType = ToolTipIcon.Warning;
+                                        queueMsgList.Enqueue(eMsg);
+                                        //this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
                                     }
                                 }
                             }
@@ -437,7 +495,7 @@ namespace GPSmallTools
         //刷新
         private void btnSelect_Click(object sender, EventArgs e)
         {
-            notifyIconMsg.ShowBalloonTip(4000, "消息提醒", "刷新了数据", ToolTipIcon.Info);
+            //notifyIconMsg.ShowBalloonTip(4000, "消息提醒", "刷新了数据", ToolTipIcon.Info);
             //FormMessageBox.Show(LoadMode.Warning, "呵呵呵呵");//弹出窗口(暂不使用)
             int fCount = 0;
             //while(true)
@@ -652,7 +710,7 @@ namespace GPSmallTools
             {
                 this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Red;
                 this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Red;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 12);
+                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 15);
             }
             else if (iValue < 0)
             {
@@ -701,7 +759,7 @@ namespace GPSmallTools
         {
             string sOpacity = txtOpacity.Text.Trim();
             int mOpactity = 0;
-            if (string.IsNullOrEmpty(sOpacity) || int.TryParse(sOpacity, out mOpactity) == false || mOpactity > 100 || mOpactity < 30)
+            if (string.IsNullOrEmpty(sOpacity) || int.TryParse(sOpacity, out mOpactity) == false || mOpactity > 100 || mOpactity < 20)
             {
                 this.notifyIconMsg.ShowBalloonTip(3000, "消息提醒", "透明度设置有误，请重新设置", ToolTipIcon.Error);
                 txtOpacity.Text = "40";
@@ -1521,5 +1579,15 @@ namespace GPSmallTools
         public string ldot{ get; set; }//今日最低点位
         public string hdot52{ get; set; }//52周最高点位
         public string ldot52{ get; set; }//52周最低点位
+    }
+
+    //消息提醒类
+    public class ErrorMsg
+    {
+        public int TitleType { get; set; }
+        public string Content { get; set; }
+        public ToolTipIcon ToolTripType { get; set; }
+        public int ShowTime { get; set; }//显示时间毫秒
+        public DateTime CreateTime { get; set; }
     }
 }
