@@ -35,6 +35,8 @@ namespace GPSmallTools
         //https://api.wmcloud.com/docs/pages/viewpage.action?pageId=1867781
         //http://tushare.org/datayes.html#id2
         //sz000789,sh600030,sz002673,sh601872,sh601727,sh600067,sz000709
+
+        //http://www.crifan.com/files/doc/docbook/web_scrape_emulate_login/release/html/web_scrape_emulate_login.html  网站数据抓取
         public Form1()
         {
             InitializeComponent();
@@ -834,6 +836,9 @@ namespace GPSmallTools
             HotKey.RegisterHotKey(Handle, 101, HotKey.KeyModifiers.WindowsKey, Keys.W);//隐藏
             //注册热键Win+Z，Id号为102。HotKey.KeyModifiers.Alt也可以直接使用数字1来表示。
             HotKey.RegisterHotKey(Handle, 102, HotKey.KeyModifiers.WindowsKey, Keys.Z);//退出
+
+            HotKey.RegisterHotKey(Handle, 103, HotKey.KeyModifiers.Alt, Keys.C);//临时提高透明度
+            HotKey.RegisterHotKey(Handle, 104, HotKey.KeyModifiers.Alt, Keys.V);//临时减低透明度
         }
 
         //在Form的Leave事件中注销热键。
@@ -845,6 +850,9 @@ namespace GPSmallTools
             HotKey.UnregisterHotKey(Handle, 101);
             //注销Id号为102的热键设定
             HotKey.UnregisterHotKey(Handle, 102);
+
+            HotKey.UnregisterHotKey(Handle, 103);
+            HotKey.UnregisterHotKey(Handle, 104);
         }
 
         /// <summary>
@@ -877,6 +885,18 @@ namespace GPSmallTools
                             //MessageBox.Show("Win + Z");
                             timer1.Enabled = false;
                             this.Close();
+                            break;
+                        case 103://临时提高透明度
+                            if(this.Opacity + 0.1 <= 1)
+                            {
+                                this.Opacity = this.Opacity + 0.1;
+                            }
+                            break;
+                        case 104://临时降低透明度
+                            if (this.Opacity - 0.1 >= 0)
+                            {
+                                this.Opacity = this.Opacity - 0.1;
+                            }
                             break;
                     }
                     break;
