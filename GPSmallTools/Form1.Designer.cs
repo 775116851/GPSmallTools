@@ -122,30 +122,30 @@
             // lblSHZS1
             // 
             this.lblSHZS1.AutoSize = true;
-            this.lblSHZS1.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblSHZS1.Font = new System.Drawing.Font("宋体", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblSHZS1.Location = new System.Drawing.Point(10, 5);
             this.lblSHZS1.Name = "lblSHZS1";
-            this.lblSHZS1.Size = new System.Drawing.Size(29, 20);
+            this.lblSHZS1.Size = new System.Drawing.Size(26, 18);
             this.lblSHZS1.TabIndex = 8;
             this.lblSHZS1.Text = "A1";
             // 
             // lblSZZS1
             // 
             this.lblSZZS1.AutoSize = true;
-            this.lblSZZS1.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblSZZS1.Font = new System.Drawing.Font("宋体", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblSZZS1.Location = new System.Drawing.Point(163, 5);
             this.lblSZZS1.Name = "lblSZZS1";
-            this.lblSZZS1.Size = new System.Drawing.Size(29, 20);
+            this.lblSZZS1.Size = new System.Drawing.Size(26, 18);
             this.lblSZZS1.TabIndex = 9;
             this.lblSZZS1.Text = "B1";
             // 
             // lblSHZS2
             // 
             this.lblSHZS2.AutoSize = true;
-            this.lblSHZS2.Font = new System.Drawing.Font("宋体", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblSHZS2.Location = new System.Drawing.Point(7, 30);
+            this.lblSHZS2.Font = new System.Drawing.Font("宋体", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblSHZS2.Location = new System.Drawing.Point(1, 30);
             this.lblSHZS2.Name = "lblSHZS2";
-            this.lblSHZS2.Size = new System.Drawing.Size(26, 18);
+            this.lblSHZS2.Size = new System.Drawing.Size(21, 14);
             this.lblSHZS2.TabIndex = 10;
             this.lblSHZS2.Text = "A2";
             // 
@@ -162,10 +162,10 @@
             // lblSZZS2
             // 
             this.lblSZZS2.AutoSize = true;
-            this.lblSZZS2.Font = new System.Drawing.Font("宋体", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblSZZS2.Location = new System.Drawing.Point(155, 30);
+            this.lblSZZS2.Font = new System.Drawing.Font("宋体", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblSZZS2.Location = new System.Drawing.Point(148, 30);
             this.lblSZZS2.Name = "lblSZZS2";
-            this.lblSZZS2.Size = new System.Drawing.Size(26, 18);
+            this.lblSZZS2.Size = new System.Drawing.Size(21, 14);
             this.lblSZZS2.TabIndex = 12;
             this.lblSZZS2.Text = "B2";
             // 

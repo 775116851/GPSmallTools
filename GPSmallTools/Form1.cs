@@ -279,10 +279,10 @@ namespace GPSmallTools
                 }
                 lblSHZS1.Text = apiSHZS.name;
                 lblSHZS1.ForeColor = shColor;
-                lblSHZS2.Text = shJT + apiSHZS.curdot;
+                lblSHZS2.Text = shJT + apiSHZS.curdot + " " + shZF + apiSHZS.rate + "%";
                 lblSHZS2.ForeColor = shColor;
-                lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate + "%";
-                lblSHZS3.ForeColor = shColor;
+                //lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate + "%";
+                //lblSHZS3.ForeColor = shColor;
                 APIMarket apiSZZS = listMarket[1];
                 double szRate = Convert.ToDouble(apiSZZS.rate);
                 Color szColor = Color.Red;
@@ -302,10 +302,10 @@ namespace GPSmallTools
                 }
                 lblSZZS1.Text = apiSZZS.name;
                 lblSZZS1.ForeColor = szColor;
-                lblSZZS2.Text = szJT + apiSZZS.curdot;
+                lblSZZS2.Text = szJT + apiSZZS.curdot + " " + szZF + apiSZZS.rate + "%";
                 lblSZZS2.ForeColor = szColor;
-                lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate + "%";
-                lblSZZS3.ForeColor = szColor;
+                //lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate + "%";
+                //lblSZZS3.ForeColor = szColor;
             }
 
             #region 绑定数据到DataGridView
@@ -461,6 +461,50 @@ namespace GPSmallTools
             dataGridView1.DataSource = listStock;
             //http://wsh1798.iteye.com/blog/601592
             #endregion
+
+            ShowHGT();
+        }
+
+        public void ShowHGT()
+        {
+            string pageContent = ShowWebClient("http://data.eastmoney.com/bkzj/hgt.html");
+            int st = pageContent.IndexOf("defset1({");
+            int en = pageContent.IndexOf("})", st);
+            string sMessage = pageContent.Substring(st + 8, en - st - 7);
+            JObject jo = (JObject)JsonConvert.DeserializeObject(sMessage);
+            if (jo.Count > 0)
+            {
+                string hgtList = jo["data"][0].ToString().Trim('"');
+                string ggtList = jo["data"][1].ToString().Trim('"');
+                if(!string.IsNullOrEmpty(hgtList))
+                {
+                    string[] hgtLists = hgtList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    string hV = hgtLists[3];
+                    lblSHZS3.Text = hgtLists[0] + " " + hgtLists[3];
+                    if (hV.Contains("-"))
+                    {
+                        lblSHZS3.ForeColor = Color.Blue;
+                    }
+                    else
+                    {
+                        lblSHZS3.ForeColor = Color.Red;
+                    }
+                }
+                if (!string.IsNullOrEmpty(ggtList))
+                {
+                    string[] ggtLists = ggtList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    string gV = ggtLists[3];
+                    lblSZZS3.Text = ggtLists[0] + " " + ggtLists[3];
+                    if (gV.Contains("-"))
+                    {
+                        lblSZZS3.ForeColor = Color.Blue;
+                    }
+                    else
+                    {
+                        lblSZZS3.ForeColor = Color.Red;
+                    }
+                }
+            }
         }
 
         //接口请求数据
@@ -494,6 +538,18 @@ namespace GPSmallTools
             return retString;
         }
 
+        //下载页面数据
+        private string ShowWebClient(string url)
+        {
+            string strHtml = string.Empty;
+            WebClient wc = new WebClient();
+            Stream myStream = wc.OpenRead(url);
+            StreamReader sr = new StreamReader(myStream, Encoding.Default);
+            strHtml = sr.ReadToEnd();
+            myStream.Close();
+            return strHtml;
+        }
+
         //刷新
         private void btnSelect_Click(object sender, EventArgs e)
         {
@@ -517,12 +573,29 @@ namespace GPSmallTools
                 this.Width = 985;
                 dataGridView1.Width = 968;
                 btnRight.Text = "《";
+
+                this.Height = 505;
+                btnDown.Text = "︽";
+
+                Cache cache = System.Web.HttpRuntime.Cache;
+                List<APIStock> listYJ = (List<APIStock>)cache.Get("MGPYJ");
+                if (listYJ != null && listYJ.Count > 0)
+                {
+                    listYJ = GetGPYJList();
+                }
+                dataGridView2.AutoGenerateColumns = false;
+                dataGridView2.Columns[0].ReadOnly = true;
+                dataGridView2.Columns[1].ReadOnly = true;
+                dataGridView2.DataSource = listYJ;
             }
             else
             {
                 this.Width = 280;
                 dataGridView1.Width = 270;
                 btnRight.Text = "》";
+
+                this.Height = 400;//默认设置400
+                btnDown.Text = "︾";
             }
         }
 
@@ -539,6 +612,10 @@ namespace GPSmallTools
                 this.Height = 400;//默认设置400
                 btnDown.Text = "︾";
                 btnDownX.Text = "︾";
+
+                this.Width = 280;
+                dataGridView1.Width = 270;
+                btnRight.Text = "》";
             }
         }
 
