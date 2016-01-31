@@ -42,12 +42,20 @@ namespace GPSmallTools
             InitializeComponent();
         }
         private ILog log = log4net.LogManager.GetLogger(typeof(Form1));
-        public static Queue<ErrorMsg> queueMsgList = new Queue<ErrorMsg>();
-        
+        public static Queue<ErrorMsg> queueMsgList = new Queue<ErrorMsg>();//股价提醒
+        public static Queue<ErrorMsg> queueTXMsgList = new Queue<ErrorMsg>();//禁止股价提醒
+        public static object locker = new object();
+        private bool BCanExec = true;
         private void Form1_Load(object sender, EventArgs e)
         {
+            Image pic = Image.FromStream(WebRequest.Create("http://hqgnqhpic.eastmoney.com/EM_Futures2010PictureProducter/Picture/IF16021RS.png?dt=1454222469738").GetResponse().GetResponseStream());
+            pictureBox1.Image = pic;
             //log.Info("呵呵");
             BindConfig();
+            //System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            //Thread tShow = new Thread(ShowTT);
+            //tShow.IsBackground = true;
+            //tShow.Start();
             Show(1);
 
             //GetAPIDataPushGPYJ();
@@ -126,384 +134,458 @@ namespace GPSmallTools
             }
         }
 
+        bool BSelect = true;
+        private void ShowTT()
+        {
+            int fCount = 0;
+            while (true)
+            {
+                //lock (locker)
+                //{
+                if (BSelect)
+                {
+                    BSelect = false;
+                    fCount++;
+                    Show(fCount);
+                    Thread.Sleep(1500);
+                    log.Info("运行次数：" + fCount);
+                    BSelect = true;
+                }
+                //}
+            }
+        }
+
         public void Show(int fCount)
         {
-            //if(!((DateTime.Now.Hour > 9 && DateTime.Now.Hour < 12) || (DateTime.Now.Hour >= 13 && DateTime.Now.Hour < 16)))
-            //{
-            //    return;
-            //}
             List<APIStock> listStock = new List<APIStock>();
             List<APIMarket> listMarket = new List<APIMarket>();
-            string sUrl = Convert.ToString(ConfigurationManager.AppSettings["GPURL"]);
-            //stockid=sz002673,sh600030,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673&list=1
-            string stockidList = ConfigurationManager.AppSettings["GPPamamList"].Trim();
-            if(string.IsNullOrEmpty(stockidList))
+            try
             {
-                MessageBox.Show("请先添加股票");
-                return;
-            }
-            string sParam = "stockid=" + stockidList + "&list=1";
-            string sMessage = HttpGet(sUrl, sParam);
-            if (!string.IsNullOrEmpty(sMessage))
-            {
-                JObject jo = (JObject)JsonConvert.DeserializeObject(sMessage);
-                string sReturnCode = Convert.ToString(jo["errNum"]);
-                string sReturnMsg = Convert.ToString(jo["errMsg"]);
-                if (string.IsNullOrEmpty(sReturnCode))
+                //if(!((DateTime.Now.Hour > 9 && DateTime.Now.Hour < 12) || (DateTime.Now.Hour >= 13 && DateTime.Now.Hour < 16)))
+                //{
+                //    return;
+                //}
+                string sUrl = Convert.ToString(ConfigurationManager.AppSettings["GPURL"]);
+                //stockid=sz002673,sh600030,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673,sz002673&list=1
+                string stockidList = ConfigurationManager.AppSettings["GPPamamList"].Trim();
+                if (string.IsNullOrEmpty(stockidList))
                 {
-                    log.Error("请求异常,次数：" + fCount);
-                    //MessageBox.Show("请求异常");
-                    this.Text = "请求异常";
+                    MessageBox.Show("请先添加股票");
                     return;
                 }
-                int mReturnCode = Convert.ToInt32(sReturnCode);
-                if (mReturnCode == (int)ErrorCode.Success)
+                string sParam = "stockid=" + stockidList + "&list=1";
+                string sMessage = HttpGet(sUrl, sParam);
+                if (!string.IsNullOrEmpty(sMessage))
                 {
-                    string sReturnContent = Convert.ToString(jo["retData"]);
-                    if (!string.IsNullOrEmpty(sReturnContent))
+                    JObject jo = (JObject)JsonConvert.DeserializeObject(sMessage);
+                    string sReturnCode = Convert.ToString(jo["errNum"]);
+                    string sReturnMsg = Convert.ToString(jo["errMsg"]);
+                    if (string.IsNullOrEmpty(sReturnCode))
                     {
-                        JObject jContent = (JObject)JsonConvert.DeserializeObject(sReturnContent);
-                        string sGSList = Convert.ToString(jContent["stockinfo"]);//上市公司列表
-                        string sDPList = Convert.ToString(jContent["market"]);//上证,深证
-                        int mGSCount = jContent["stockinfo"].AsQueryable().Count();
-                        //涨跌判断
-                        List<APIStock> listGPYJ = GetGPYJList();
-                        for (int i = 0; i < mGSCount; i++)
+                        log.Error("请求异常,次数：" + fCount);
+                        //MessageBox.Show("请求异常");
+                        this.Text = "请求异常";
+                        return;
+                    }
+                    int mReturnCode = Convert.ToInt32(sReturnCode);
+                    if (mReturnCode == (int)ErrorCode.Success)
+                    {
+                        string sReturnContent = Convert.ToString(jo["retData"]);
+                        if (!string.IsNullOrEmpty(sReturnContent))
                         {
-                            APIStock stock = new APIStock();
-                            JObject jStock = (JObject)jContent["stockinfo"][i];
-                            stock.name = Convert.ToString(jStock["name"]).Trim('"');
-                            if (string.IsNullOrEmpty(stock.name))
+                            JObject jContent = (JObject)JsonConvert.DeserializeObject(sReturnContent);
+                            string sGSList = Convert.ToString(jContent["stockinfo"]);//上市公司列表
+                            string sDPList = Convert.ToString(jContent["market"]);//上证,深证
+                            int mGSCount = jContent["stockinfo"].AsQueryable().Count();
+                            //涨跌判断
+                            List<APIStock> listGPYJ = GetGPYJList();
+                            for (int i = 0; i < mGSCount; i++)
                             {
-                                continue;
-                            }
-                            stock.SysNo = Convert.ToString(jStock["code"]).Trim('"');
-                            stock.currentPrice = Convert.ToString(jStock["currentPrice"]);
-                            string mIncrease = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));//涨跌幅
-                            if(listGPYJ != null && listGPYJ.Count > 0)
-                            {
-                                var mGP = (from t in listGPYJ where t.SysNo == stock.SysNo && t.ISYJ == 1 select t).ToList();
-                                if(mGP.Count > 0)
+                                APIStock stock = new APIStock();
+                                JObject jStock = (JObject)jContent["stockinfo"][i];
+                                stock.name = Convert.ToString(jStock["name"]).Trim('"');
+                                if (string.IsNullOrEmpty(stock.name))
                                 {
-                                    string returnMsg = PriceYJ(stock.currentPrice, mIncrease, mGP[0]);
-                                    if(!string.IsNullOrEmpty(returnMsg))
+                                    continue;
+                                }
+                                stock.SysNo = Convert.ToString(jStock["code"]).Trim('"');
+                                stock.currentPrice = Convert.ToString(jStock["currentPrice"]);
+                                string mIncrease = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));//涨跌幅
+                                //当前股票已提醒的间隔时间
+                                var mGPYTX = (from t in queueTXMsgList where t.Code == stock.SysNo && t.CreateTime >= DateTime.Now.AddMinutes(-1) select t).ToList();
+                                if(mGPYTX.Count <= 0)
+                                {
+                                    if (listGPYJ != null && listGPYJ.Count > 0)
                                     {
-                                        ErrorMsg eMsg = new ErrorMsg();
-                                        eMsg.TitleType = (int)ErrorTitleType.GJMsg;
-                                        eMsg.Content = returnMsg;
-                                        eMsg.CreateTime = DateTime.Now;
-                                        eMsg.ShowTime = 5000;
-                                        eMsg.ToolTripType = ToolTipIcon.Warning;
-                                        queueMsgList.Enqueue(eMsg);
-                                        //this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
+                                        var mGP = (from t in listGPYJ where t.SysNo == stock.SysNo && t.ISYJ == 1 select t).ToList();
+                                        if (mGP.Count > 0)
+                                        {
+                                            string returnMsg = PriceYJ(stock.currentPrice, mIncrease, mGP[0]);
+                                            if (!string.IsNullOrEmpty(returnMsg))
+                                            {
+                                                ErrorMsg eMsg = new ErrorMsg();
+                                                eMsg.Code = stock.SysNo;
+                                                eMsg.TitleType = (int)ErrorTitleType.GJMsg;
+                                                eMsg.Content = returnMsg;
+                                                eMsg.CreateTime = DateTime.Now;
+                                                eMsg.ShowTime = 5000;
+                                                eMsg.ToolTripType = ToolTipIcon.Warning;
+                                                queueMsgList.Enqueue(eMsg);
+                                                queueTXMsgList.Enqueue(eMsg);
+                                                //this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                            stock.name = Convert.ToString(jStock["name"]).Trim('"');
-                            stock.code = Convert.ToString(jStock["code"]).Trim('"').Substring(2);
-                            stock.date = jStock["time"].ToString().Trim('"');
-                            stock.openningPrice = Convert.ToString(jStock["OpenningPrice"]);
-                            stock.closingPrice = Convert.ToString(jStock["closingPrice"]);
-                            stock.hPrice = Convert.ToString(jStock["hPrice"]);
-                            stock.lPrice = Convert.ToString(jStock["lPrice"]);
-                            
-                            //stock.growth = Convert.ToString(jStock["growth"]);
-                            //stock.growthPercent = Convert.ToString(jStock["growthPercent"]);
-                            //stock.dealnumber = Convert.ToString(jStock["dealnumber"]);
-                            stock.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jStock["turnover"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
-                            //stock.hPrice52 = Convert.ToString(jStock["52hPrice"]);
-                            //stock.lPrice52 = Convert.ToString(jStock["52lPrice"]);
 
-                            stock.competitivePrice = Convert.ToString(jStock["competitivePrice"]);
-                            stock.auctionPrice = Convert.ToString(jStock["auctionPrice"]);
-                            stock.totalNumber = Convert.ToString(Math.Round(Convert.ToDouble(jStock["totalNumber"].ToString())/1000000, 2, MidpointRounding.AwayFromZero));
-                            stock.increase = (mIncrease.Substring(0, 1) == "-") ? mIncrease.Substring(1) : mIncrease;
-                            listStock.Add(stock);
+                                
+                                stock.name = Convert.ToString(jStock["name"]).Trim('"');
+                                stock.code = Convert.ToString(jStock["code"]).Trim('"').Substring(2);
+                                stock.date = jStock["time"].ToString().Trim('"');
+                                stock.openningPrice = Convert.ToString(jStock["OpenningPrice"]);
+                                stock.closingPrice = Convert.ToString(jStock["closingPrice"]);
+                                stock.hPrice = Convert.ToString(jStock["hPrice"]);
+                                stock.lPrice = Convert.ToString(jStock["lPrice"]);
+
+                                //stock.growth = Convert.ToString(jStock["growth"]);
+                                //stock.growthPercent = Convert.ToString(jStock["growthPercent"]);
+                                //stock.dealnumber = Convert.ToString(jStock["dealnumber"]);
+                                stock.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jStock["turnover"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
+                                //stock.hPrice52 = Convert.ToString(jStock["52hPrice"]);
+                                //stock.lPrice52 = Convert.ToString(jStock["52lPrice"]);
+
+                                stock.competitivePrice = Convert.ToString(jStock["competitivePrice"]);
+                                stock.auctionPrice = Convert.ToString(jStock["auctionPrice"]);
+                                stock.totalNumber = Convert.ToString(Math.Round(Convert.ToDouble(jStock["totalNumber"].ToString()) / 1000000, 2, MidpointRounding.AwayFromZero));
+                                stock.increase = (mIncrease.Substring(0, 1) == "-") ? mIncrease.Substring(1) : mIncrease;
+                                listStock.Add(stock);
+                            }
+                            JObject jMarket = (JObject)jContent["market"];
+                            APIMarket mSH = new APIMarket();
+                            mSH.name = jMarket["shanghai"]["name"].ToString().Trim('"');
+                            mSH.curdot = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["curdot"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            mSH.curprice = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["curprice"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            mSH.rate = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["rate"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            mSH.dealnumber = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["dealnumber"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
+                            mSH.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["turnover"].ToString()) / 10000, 2, MidpointRounding.AwayFromZero));
+                            APIMarket mSZ = new APIMarket();
+                            mSZ.name = Convert.ToString(jMarket["shenzhen"]["name"]).Trim('"');
+                            mSZ.curdot = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["curdot"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            mSZ.curprice = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["curprice"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            mSZ.rate = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["rate"].ToString()), 2, MidpointRounding.AwayFromZero));
+                            mSZ.dealnumber = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["dealnumber"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
+                            mSZ.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["turnover"].ToString()) / 10000, 2, MidpointRounding.AwayFromZero));
+                            listMarket.Add(mSH);
+                            listMarket.Add(mSZ);
                         }
-                        JObject jMarket = (JObject)jContent["market"];
-                        APIMarket mSH = new APIMarket();
-                        mSH.name = jMarket["shanghai"]["name"].ToString().Trim('"');
-                        mSH.curdot = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["curdot"].ToString()), 2, MidpointRounding.AwayFromZero));
-                        mSH.curprice = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["curprice"].ToString()), 2, MidpointRounding.AwayFromZero));
-                        mSH.rate = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["rate"].ToString()), 2, MidpointRounding.AwayFromZero));
-                        mSH.dealnumber = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["dealnumber"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
-                        mSH.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shanghai"]["turnover"].ToString()) / 10000, 2, MidpointRounding.AwayFromZero));
-                        APIMarket mSZ = new APIMarket();
-                        mSZ.name = Convert.ToString(jMarket["shenzhen"]["name"]).Trim('"');
-                        mSZ.curdot = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["curdot"].ToString()), 2, MidpointRounding.AwayFromZero));
-                        mSZ.curprice = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["curprice"].ToString()), 2, MidpointRounding.AwayFromZero));
-                        mSZ.rate = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["rate"].ToString()), 2, MidpointRounding.AwayFromZero));
-                        mSZ.dealnumber = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["dealnumber"].ToString()) / 100000000, 2, MidpointRounding.AwayFromZero));
-                        mSZ.turnover = Convert.ToString(Math.Round(Convert.ToDouble(jMarket["shenzhen"]["turnover"].ToString()) / 10000, 2, MidpointRounding.AwayFromZero));
-                        listMarket.Add(mSH);
-                        listMarket.Add(mSZ);
+                    }
+                    else if (!Enum.IsDefined(typeof(ErrorCode), mReturnCode))
+                    {
+                        log.Error("返回未知异常,次数：" + fCount + ",异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
+                        //MessageBox.Show("返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
+                        this.Text = "返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg;
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show(GetDescription(typeof(ErrorCode), mReturnCode));
                     }
                 }
-                else if (!Enum.IsDefined(typeof(ErrorCode), mReturnCode))
+                else
                 {
-                    log.Error("返回未知异常,次数：" + fCount + ",异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
-                    //MessageBox.Show("返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg);
-                    this.Text = "返回未知异常,异常编号:" + mReturnCode + ";异常说明：" + sReturnMsg;
+                    log.Error("返回数据空,次数：" + fCount);
+                    //MessageBox.Show("返回数据空");
+                    this.Text = "返回数据空";
                     return;
                 }
-                else
-                {
-                    MessageBox.Show(GetDescription(typeof(ErrorCode), mReturnCode));
-                }
             }
-            else
+            catch (Exception ex)
             {
-                log.Error("返回数据空,次数：" + fCount);
-                //MessageBox.Show("返回数据空");
-                this.Text = "返回数据空";
-                return;
+                log.Error("获取股票数据1，出现异常："+ex.Message+";异常详情：" + ex);
             }
-            if(listMarket.Count > 0)
+
+            try
             {
-                APIMarket apiSHZS = listMarket[0];
-                double shRate = Convert.ToDouble(apiSHZS.rate);
-                Color shColor = Color.Red;
-                string shZF = "+";
-                string shJT = "↑";
-                if (shRate >= 0)
+                if (listMarket.Count > 0)
                 {
-                    shColor = Color.Red;
-                    shZF = "+";
-                    shJT = "↑";
+                    APIMarket apiSHZS = listMarket[0];
+                    double shRate = Convert.ToDouble(apiSHZS.rate);
+                    Color shColor = Color.Red;
+                    string shZF = "+";
+                    string shJT = "↑";
+                    if (shRate >= 0)
+                    {
+                        shColor = Color.Red;
+                        shZF = "+";
+                        shJT = "↑";
+                    }
+                    else
+                    {
+                        shColor = Color.Green;
+                        shZF = "";
+                        shJT = "↓";
+                    }
+                    lblSHZS1.Text = apiSHZS.name;
+                    lblSHZS1.ForeColor = shColor;
+                    lblSHZS2.Text = shJT + apiSHZS.curdot + " " + shZF + apiSHZS.rate + "%";
+                    lblSHZS2.ForeColor = shColor;
+                    //lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate + "%";
+                    //lblSHZS3.ForeColor = shColor;
+                    APIMarket apiSZZS = listMarket[1];
+                    double szRate = Convert.ToDouble(apiSZZS.rate);
+                    Color szColor = Color.Red;
+                    string szZF = "+";
+                    string szJT = "↑";
+                    if (szRate >= 0)
+                    {
+                        szColor = Color.Red;
+                        szZF = "+";
+                        szJT = "↑";
+                    }
+                    else
+                    {
+                        szColor = Color.Green;
+                        szZF = "";
+                        szJT = "↓";
+                    }
+                    lblSZZS1.Text = apiSZZS.name;
+                    lblSZZS1.ForeColor = szColor;
+                    lblSZZS2.Text = szJT + apiSZZS.curdot + " " + szZF + apiSZZS.rate + "%";
+                    lblSZZS2.ForeColor = szColor;
+                    //lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate + "%";
+                    //lblSZZS3.ForeColor = szColor;
                 }
-                else
-                {
-                    shColor = Color.Green;
-                    shZF = "";
-                    shJT = "↓";
-                }
-                lblSHZS1.Text = apiSHZS.name;
-                lblSHZS1.ForeColor = shColor;
-                lblSHZS2.Text = shJT + apiSHZS.curdot + " " + shZF + apiSHZS.rate + "%";
-                lblSHZS2.ForeColor = shColor;
-                //lblSHZS3.Text = shZF + apiSHZS.curprice + " " + shZF + apiSHZS.rate + "%";
-                //lblSHZS3.ForeColor = shColor;
-                APIMarket apiSZZS = listMarket[1];
-                double szRate = Convert.ToDouble(apiSZZS.rate);
-                Color szColor = Color.Red;
-                string szZF = "+";
-                string szJT = "↑";
-                if (szRate >= 0)
-                {
-                    szColor = Color.Red;
-                    szZF = "+";
-                    szJT = "↑";
-                }
-                else
-                {
-                    szColor = Color.Green;
-                    szZF = "";
-                    szJT = "↓";
-                }
-                lblSZZS1.Text = apiSZZS.name;
-                lblSZZS1.ForeColor = szColor;
-                lblSZZS2.Text = szJT + apiSZZS.curdot + " " + szZF + apiSZZS.rate + "%";
-                lblSZZS2.ForeColor = szColor;
-                //lblSZZS3.Text = szZF + apiSZZS.curprice + " " + szZF + apiSZZS.rate + "%";
-                //lblSZZS3.ForeColor = szColor;
+            }
+            catch (Exception ex)
+            {
+                log.Error("获取股票数据2，出现异常："+ex.Message+";异常详情：" + ex);
             }
 
-            #region 绑定数据到DataGridView
-            
-            dataGridView1.Columns.Clear();
-            //dataGridView1.Columns[4].DataPropertyName
-            DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
-            col1.HeaderText = "股票名称";
-            col1.DataPropertyName = "name";
-            col1.Name = "name";
-            col1.Width = 80;
-            col1.ReadOnly = true;
-            col1.Frozen = true;
-            //col1.ContextMenuStrip = contextMenuStripGridView;
-            dataGridView1.Columns.Insert(0, col1); 
-            DataGridViewTextBoxColumn col3 = new DataGridViewTextBoxColumn();
-            col3.HeaderText = "当前价";
-            col3.DataPropertyName = "currentPrice";
-            col3.Name = "currentPrice";
-            col3.Width = 70;
-            col3.ReadOnly = true;
-            //col3.ContextMenuStrip = contextMenuStripGridView;
-            dataGridView1.Columns.Insert(1, col3);
-            DataGridViewTextBoxColumn col18 = new DataGridViewTextBoxColumn();
-            col18.HeaderText = "涨幅(%)";
-            col18.DataPropertyName = "increase";
-            col18.Name = "increase";
-            col18.Width = 75;
-            col18.ReadOnly = true;
-            //col18.ContextMenuStrip = contextMenuStripGridView;
-            dataGridView1.Columns.Insert(2, col18);
-            DataGridViewTextBoxColumn col2 = new DataGridViewTextBoxColumn();
-            col2.HeaderText = "股票代码";
-            col2.DataPropertyName = "code";
-            col2.Name = "code";
-            col2.Width = 80;
-            col2.ReadOnly = true;
-            //col2.ContextMenuStrip = contextMenuStripGridView;
-            dataGridView1.Columns.Insert(3, col2);
-            DataGridViewTextBoxColumn col6 = new DataGridViewTextBoxColumn();
-            col6.HeaderText = "今日最高价";
-            col6.DataPropertyName = "hPrice";
-            col6.Name = "hPrice";
-            col6.Width = 90;
-            col6.ReadOnly = true;
-            dataGridView1.Columns.Insert(4, col6);
-            DataGridViewTextBoxColumn col7 = new DataGridViewTextBoxColumn();
-            col7.HeaderText = "今日最低价";
-            col7.DataPropertyName = "lPrice";
-            col7.Name = "lPrice";
-            col7.Width = 90;
-            col7.ReadOnly = true;
-            dataGridView1.Columns.Insert(5, col7);
-            DataGridViewTextBoxColumn col8 = new DataGridViewTextBoxColumn();
-            col8.HeaderText = "开盘价";
-            col8.DataPropertyName = "openningPrice";
-            col8.Name = "openningPrice";
-            col8.Width = 70;
-            col8.ReadOnly = true;
-            dataGridView1.Columns.Insert(6, col8);
-            DataGridViewTextBoxColumn col9 = new DataGridViewTextBoxColumn();
-            col9.HeaderText = "昨日收盘价";
-            col9.DataPropertyName = "closingPrice";
-            col9.Name = "closingPrice";
-            col9.Width = 90;
-            col9.ReadOnly = true;
-            dataGridView1.Columns.Insert(7, col9);
-            DataGridViewTextBoxColumn col17 = new DataGridViewTextBoxColumn();
-            col17.HeaderText = "成交量(万)";
-            col17.DataPropertyName = "totalNumber";
-            col17.Name = "totalNumber";
-            col17.Width = 90;
-            col17.ReadOnly = true;
-            dataGridView1.Columns.Insert(8, col17);
-            DataGridViewTextBoxColumn col13 = new DataGridViewTextBoxColumn();
-            col13.HeaderText = "成交金额(亿)";
-            col13.DataPropertyName = "turnover";
-            col13.Name = "turnover";
-            col13.Width = 100;
-            col13.ReadOnly = true;
-            dataGridView1.Columns.Insert(9, col13);
-            DataGridViewTextBoxColumn col14 = new DataGridViewTextBoxColumn();
-            col14.HeaderText = "刷新日期";
-            col14.DataPropertyName = "date";
-            col14.Name = "date";
-            col14.Width = 90;
-            col14.ReadOnly = true;
-            dataGridView1.Columns.Insert(10, col14);
+            try
+            {
+                lock (locker)
+                {
+                    #region 绑定数据到DataGridView
 
-            //DataGridViewTextBoxColumn col4 = new DataGridViewTextBoxColumn();
-            //col4.HeaderText = "涨幅比例";
-            //col4.DataPropertyName = "growthPercent";
-            //col4.Name = "growthPercent";
-            //col4.Width = 100;
-            //col4.ReadOnly = true;
-            //dataGridView1.Columns.Add(col4);
-            //DataGridViewTextBoxColumn col5 = new DataGridViewTextBoxColumn();
-            //col5.HeaderText = "价格涨幅";
-            //col5.DataPropertyName = "growth";
-            //col5.Name = "growth";
-            //col5.Width = 100;
-            //col5.ReadOnly = true;
-            //dataGridView1.Columns.Add(col5);
-            
-            
-            //DataGridViewTextBoxColumn col10 = new DataGridViewTextBoxColumn();
-            //col10.HeaderText = "52周最高价";
-            //col10.DataPropertyName = "hPrice52";
-            //col10.Name = "hPrice52";
-            //col10.Width = 100;
-            //col10.ReadOnly = true;
-            //dataGridView1.Columns.Add(col10);
-            //DataGridViewTextBoxColumn col11 = new DataGridViewTextBoxColumn();
-            //col11.HeaderText = "52周最低价";
-            //col11.DataPropertyName = "lPrice52";
-            //col11.Name = "lPrice52";
-            //col11.Width = 100;
-            //col11.ReadOnly = true;
-            //dataGridView1.Columns.Add(col11);
-            //DataGridViewTextBoxColumn col12 = new DataGridViewTextBoxColumn();
-            //col12.HeaderText = "成交量股";
-            //col12.DataPropertyName = "dealnumber";
-            //col12.Name = "dealnumber";
-            //col12.Width = 100;
-            //col12.ReadOnly = true;
-            //dataGridView1.Columns.Add(col12);
+                    dataGridView1.Columns.Clear();
+                    if (listStock.Count > 0)
+                    {
+                        //dataGridView1.Columns[4].DataPropertyName
+                        DataGridViewTextBoxColumn col1 = new DataGridViewTextBoxColumn();
+                        col1.HeaderText = "股票名称";
+                        col1.DataPropertyName = "name";
+                        col1.Name = "name";
+                        col1.Width = 80;
+                        col1.ReadOnly = true;
+                        col1.Frozen = true;
+                        //col1.ContextMenuStrip = contextMenuStripGridView;
+                        dataGridView1.Columns.Insert(0, col1);
+                        DataGridViewTextBoxColumn col3 = new DataGridViewTextBoxColumn();
+                        col3.HeaderText = "当前价";
+                        col3.DataPropertyName = "currentPrice";
+                        col3.Name = "currentPrice";
+                        col3.Width = 70;
+                        col3.ReadOnly = true;
+                        //col3.ContextMenuStrip = contextMenuStripGridView;
+                        dataGridView1.Columns.Insert(1, col3);
+                        DataGridViewTextBoxColumn col18 = new DataGridViewTextBoxColumn();
+                        col18.HeaderText = "涨幅(%)";
+                        col18.DataPropertyName = "increase";
+                        col18.Name = "increase";
+                        col18.Width = 75;
+                        col18.ReadOnly = true;
+                        //col18.ContextMenuStrip = contextMenuStripGridView;
+                        dataGridView1.Columns.Insert(2, col18);
+                        DataGridViewTextBoxColumn col2 = new DataGridViewTextBoxColumn();
+                        col2.HeaderText = "股票代码";
+                        col2.DataPropertyName = "code";
+                        col2.Name = "code";
+                        col2.Width = 80;
+                        col2.ReadOnly = true;
+                        //col2.ContextMenuStrip = contextMenuStripGridView;
+                        dataGridView1.Columns.Insert(3, col2);
+                        DataGridViewTextBoxColumn col6 = new DataGridViewTextBoxColumn();
+                        col6.HeaderText = "今日最高价";
+                        col6.DataPropertyName = "hPrice";
+                        col6.Name = "hPrice";
+                        col6.Width = 90;
+                        col6.ReadOnly = true;
+                        dataGridView1.Columns.Insert(4, col6);
+                        DataGridViewTextBoxColumn col7 = new DataGridViewTextBoxColumn();
+                        col7.HeaderText = "今日最低价";
+                        col7.DataPropertyName = "lPrice";
+                        col7.Name = "lPrice";
+                        col7.Width = 90;
+                        col7.ReadOnly = true;
+                        dataGridView1.Columns.Insert(5, col7);
+                        DataGridViewTextBoxColumn col8 = new DataGridViewTextBoxColumn();
+                        col8.HeaderText = "开盘价";
+                        col8.DataPropertyName = "openningPrice";
+                        col8.Name = "openningPrice";
+                        col8.Width = 70;
+                        col8.ReadOnly = true;
+                        dataGridView1.Columns.Insert(6, col8);
+                        DataGridViewTextBoxColumn col9 = new DataGridViewTextBoxColumn();
+                        col9.HeaderText = "昨日收盘价";
+                        col9.DataPropertyName = "closingPrice";
+                        col9.Name = "closingPrice";
+                        col9.Width = 90;
+                        col9.ReadOnly = true;
+                        dataGridView1.Columns.Insert(7, col9);
+                        DataGridViewTextBoxColumn col17 = new DataGridViewTextBoxColumn();
+                        col17.HeaderText = "成交量(万)";
+                        col17.DataPropertyName = "totalNumber";
+                        col17.Name = "totalNumber";
+                        col17.Width = 90;
+                        col17.ReadOnly = true;
+                        dataGridView1.Columns.Insert(8, col17);
+                        DataGridViewTextBoxColumn col13 = new DataGridViewTextBoxColumn();
+                        col13.HeaderText = "成交金额(亿)";
+                        col13.DataPropertyName = "turnover";
+                        col13.Name = "turnover";
+                        col13.Width = 100;
+                        col13.ReadOnly = true;
+                        dataGridView1.Columns.Insert(9, col13);
+                        DataGridViewTextBoxColumn col14 = new DataGridViewTextBoxColumn();
+                        col14.HeaderText = "刷新日期";
+                        col14.DataPropertyName = "date";
+                        col14.Name = "date";
+                        col14.Width = 90;
+                        col14.ReadOnly = true;
+                        dataGridView1.Columns.Insert(10, col14);
 
-            //DataGridViewTextBoxColumn col15 = new DataGridViewTextBoxColumn();
-            //col15.HeaderText = "未知competitivePrice";
-            //col15.DataPropertyName = "competitivePrice";
-            //col15.Name = "competitivePrice";
-            //col15.Width = 100;
-            //col15.ReadOnly = true;
-            //dataGridView1.Columns.Add(col15);
-            //DataGridViewTextBoxColumn col16 = new DataGridViewTextBoxColumn();
-            //col16.HeaderText = "未知auctionPrice";
-            //col16.DataPropertyName = "auctionPrice";
-            //col16.Name = "auctionPrice";
-            //col16.Width = 100;
-            //col16.ReadOnly = true;
-            //dataGridView1.Columns.Add(col16);
+                        //DataGridViewTextBoxColumn col4 = new DataGridViewTextBoxColumn();
+                        //col4.HeaderText = "涨幅比例";
+                        //col4.DataPropertyName = "growthPercent";
+                        //col4.Name = "growthPercent";
+                        //col4.Width = 100;
+                        //col4.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col4);
+                        //DataGridViewTextBoxColumn col5 = new DataGridViewTextBoxColumn();
+                        //col5.HeaderText = "价格涨幅";
+                        //col5.DataPropertyName = "growth";
+                        //col5.Name = "growth";
+                        //col5.Width = 100;
+                        //col5.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col5);
 
-            //dataGridView1.AllowUserToAddRows = false;
-            //dataGridView1.AllowUserToOrderColumns = true;        //允许用户调整列的位置
-            //dataGridView1.Columns[0].Visible = false; 
-            //dataGridView1.ColumnHeadersVisible = false; // 列头隐藏 
-            //dataGridView1.RowHeadersVisible = false; // 行头隐藏
-            dataGridView1.ReadOnly = true;
-            dataGridView1.AutoGenerateColumns = false;
-            
-            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; 
-            dataGridView1.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridView1.DataSource = listStock;
-            //http://wsh1798.iteye.com/blog/601592
-            #endregion
 
-            ShowHGT();
+                        //DataGridViewTextBoxColumn col10 = new DataGridViewTextBoxColumn();
+                        //col10.HeaderText = "52周最高价";
+                        //col10.DataPropertyName = "hPrice52";
+                        //col10.Name = "hPrice52";
+                        //col10.Width = 100;
+                        //col10.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col10);
+                        //DataGridViewTextBoxColumn col11 = new DataGridViewTextBoxColumn();
+                        //col11.HeaderText = "52周最低价";
+                        //col11.DataPropertyName = "lPrice52";
+                        //col11.Name = "lPrice52";
+                        //col11.Width = 100;
+                        //col11.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col11);
+                        //DataGridViewTextBoxColumn col12 = new DataGridViewTextBoxColumn();
+                        //col12.HeaderText = "成交量股";
+                        //col12.DataPropertyName = "dealnumber";
+                        //col12.Name = "dealnumber";
+                        //col12.Width = 100;
+                        //col12.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col12);
+
+                        //DataGridViewTextBoxColumn col15 = new DataGridViewTextBoxColumn();
+                        //col15.HeaderText = "未知competitivePrice";
+                        //col15.DataPropertyName = "competitivePrice";
+                        //col15.Name = "competitivePrice";
+                        //col15.Width = 100;
+                        //col15.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col15);
+                        //DataGridViewTextBoxColumn col16 = new DataGridViewTextBoxColumn();
+                        //col16.HeaderText = "未知auctionPrice";
+                        //col16.DataPropertyName = "auctionPrice";
+                        //col16.Name = "auctionPrice";
+                        //col16.Width = 100;
+                        //col16.ReadOnly = true;
+                        //dataGridView1.Columns.Add(col16);
+
+                        //dataGridView1.AllowUserToAddRows = false;
+                        //dataGridView1.AllowUserToOrderColumns = true;        //允许用户调整列的位置
+                        //dataGridView1.Columns[0].Visible = false; 
+                        //dataGridView1.ColumnHeadersVisible = false; // 列头隐藏 
+                        //dataGridView1.RowHeadersVisible = false; // 行头隐藏
+                        dataGridView1.ReadOnly = true;
+                        dataGridView1.AutoGenerateColumns = false;
+
+                        dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                        dataGridView1.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                        dataGridView1.DataSource = listStock;
+                        //http://wsh1798.iteye.com/blog/601592
+                    }
+                    #endregion
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("获取股票数据3，出现异常："+ex.Message+";异常详情：" + ex);
+            }
+
+            try
+            {
+                ShowHGT();
+            }
+            catch (Exception ex)
+            {
+                log.Error("获取股票数据4，出现异常："+ex.Message+";异常详情：" + ex);
+            }
         }
 
         public void ShowHGT()
         {
             string pageContent = ShowWebClient("http://data.eastmoney.com/bkzj/hgt.html");
-            int st = pageContent.IndexOf("defset1({");
-            int en = pageContent.IndexOf("})", st);
-            string sMessage = pageContent.Substring(st + 8, en - st - 7);
-            JObject jo = (JObject)JsonConvert.DeserializeObject(sMessage);
-            if (jo.Count > 0)
+            if (!string.IsNullOrEmpty(pageContent))
             {
-                string hgtList = jo["data"][0].ToString().Trim('"');
-                string ggtList = jo["data"][1].ToString().Trim('"');
-                if(!string.IsNullOrEmpty(hgtList))
+                int st = pageContent.IndexOf("defset1({");
+                int en = pageContent.IndexOf("})", st);
+                string sMessage = pageContent.Substring(st + 8, en - st - 7);
+                JObject jo = (JObject)JsonConvert.DeserializeObject(sMessage);
+                if (jo.Count > 0)
                 {
-                    string[] hgtLists = hgtList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    string hV = hgtLists[3];
-                    lblSHZS3.Text = hgtLists[0] + " " + hgtLists[3];
-                    if (hV.Contains("-"))
+                    string hgtList = jo["data"][0].ToString().Trim('"');
+                    string ggtList = jo["data"][1].ToString().Trim('"');
+                    if (!string.IsNullOrEmpty(hgtList))
                     {
-                        lblSHZS3.ForeColor = Color.Blue;
+                        string[] hgtLists = hgtList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        string hV = hgtLists[3];
+                        lblSHZS3.Text = hgtLists[0] + " " + hgtLists[3];
+                        if (hV.Contains("-"))
+                        {
+                            lblSHZS3.ForeColor = Color.Blue;
+                        }
+                        else
+                        {
+                            lblSHZS3.ForeColor = Color.Red;
+                        }
                     }
-                    else
+                    if (!string.IsNullOrEmpty(ggtList))
                     {
-                        lblSHZS3.ForeColor = Color.Red;
+                        string[] ggtLists = ggtList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        string gV = ggtLists[3];
+                        lblSZZS3.Text = ggtLists[0] + " " + ggtLists[3];
+                        if (gV.Contains("-"))
+                        {
+                            lblSZZS3.ForeColor = Color.Blue;
+                        }
+                        else
+                        {
+                            lblSZZS3.ForeColor = Color.Red;
+                        }
                     }
                 }
-                if (!string.IsNullOrEmpty(ggtList))
-                {
-                    string[] ggtLists = ggtList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    string gV = ggtLists[3];
-                    lblSZZS3.Text = ggtLists[0] + " " + ggtLists[3];
-                    if (gV.Contains("-"))
-                    {
-                        lblSZZS3.ForeColor = Color.Blue;
-                    }
-                    else
-                    {
-                        lblSZZS3.ForeColor = Color.Red;
-                    }
-                }
+            }
+            else
+            {
+                lblSHZS3.Text = "";
+                lblSZZS3.Text = "";
+
             }
         }
 
@@ -542,11 +624,18 @@ namespace GPSmallTools
         private string ShowWebClient(string url)
         {
             string strHtml = string.Empty;
-            WebClient wc = new WebClient();
-            Stream myStream = wc.OpenRead(url);
-            StreamReader sr = new StreamReader(myStream, Encoding.Default);
-            strHtml = sr.ReadToEnd();
-            myStream.Close();
+            try
+            {
+                WebClient wc = new WebClient();
+                Stream myStream = wc.OpenRead(url);
+                StreamReader sr = new StreamReader(myStream, Encoding.Default);
+                strHtml = sr.ReadToEnd();
+                myStream.Close();
+            }
+            catch (Exception ex)
+            {
+                log.Error("下载沪港通页面出错，错误信息："+ex.Message+";错误详情：" + ex);
+            }
             return strHtml;
         }
 
@@ -586,6 +675,7 @@ namespace GPSmallTools
                 dataGridView2.AutoGenerateColumns = false;
                 dataGridView2.Columns[0].ReadOnly = true;
                 dataGridView2.Columns[1].ReadOnly = true;
+                dataGridView2.Columns[2].ReadOnly = true;
                 dataGridView2.DataSource = listYJ;
             }
             else
@@ -622,28 +712,28 @@ namespace GPSmallTools
         //上下扩展X
         private void btnDownX_Click(object sender, EventArgs e)
         {
-            if (btnDownX.Text.Trim() == "︾")
-            {
-                this.Height = 730;
-                btnDownX.Text = "︽";
-                //GetAPIDataPushGPYJ();
-                Cache cache = System.Web.HttpRuntime.Cache;
-                List<APIStock> listYJ = (List<APIStock>)cache.Get("MGPYJ");
-                if (listYJ != null && listYJ.Count > 0)
-                {
-                    listYJ = GetGPYJList();
-                }
-                dataGridView2.AutoGenerateColumns = false;
-                dataGridView2.Columns[0].ReadOnly = true;
-                dataGridView2.Columns[1].ReadOnly = true;
-                dataGridView2.DataSource = listYJ;
-            }
-            else
-            {
-                this.Height = 400;//默认设置400
-                btnDownX.Text = "︾";
-                btnDown.Text = "︾";
-            }
+            //if (btnDownX.Text.Trim() == "︾")
+            //{
+            //    this.Height = 730;
+            //    btnDownX.Text = "︽";
+            //    //GetAPIDataPushGPYJ();
+            //    Cache cache = System.Web.HttpRuntime.Cache;
+            //    List<APIStock> listYJ = (List<APIStock>)cache.Get("MGPYJ");
+            //    if (listYJ != null && listYJ.Count > 0)
+            //    {
+            //        listYJ = GetGPYJList();
+            //    }
+            //    dataGridView2.AutoGenerateColumns = false;
+            //    dataGridView2.Columns[0].ReadOnly = true;
+            //    dataGridView2.Columns[1].ReadOnly = true;
+            //    dataGridView2.DataSource = listYJ;
+            //}
+            //else
+            //{
+            //    this.Height = 400;//默认设置400
+            //    btnDownX.Text = "︾";
+            //    btnDown.Text = "︾";
+            //}
         }
 
         //添加
@@ -777,31 +867,38 @@ namespace GPSmallTools
         //涨红跌绿
         private void dataGridView1_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
         {
-            dataGridView1.Columns[e.RowIndex].SortMode = DataGridViewColumnSortMode.NotSortable;//表头不排序 为标题居中
-            //昨日收盘价
-            object sValue = this.dataGridView1.Rows[e.RowIndex].Cells["closingPrice"].Value;
-            //当前价
-            object cValue = this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Value;
-            //差价
-            double iValue = Convert.ToDouble(cValue) - Convert.ToDouble(sValue);
-            //涨跌幅( (当前价-昨收盘价)/昨收盘价 )
-            if (iValue > 0)//差价
+            try
             {
-                this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Red;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Red;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 15);
+                dataGridView1.Columns[e.RowIndex].SortMode = DataGridViewColumnSortMode.NotSortable;//表头不排序 为标题居中
+                //昨日收盘价
+                object sValue = this.dataGridView1.Rows[e.RowIndex].Cells["closingPrice"].Value;
+                //当前价
+                object cValue = this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Value;
+                //差价
+                double iValue = Convert.ToDouble(cValue) - Convert.ToDouble(sValue);
+                //涨跌幅( (当前价-昨收盘价)/昨收盘价 )
+                if (iValue > 0)//差价
+                {
+                    this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Red;
+                    this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Red;
+                    this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 15);
+                }
+                else if (iValue < 0)
+                {
+                    this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Green;
+                    this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Green;
+                    this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 12);
+                }
+                else
+                {
+                    this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.White;
+                    this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.White;
+                    this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 9);
+                }
             }
-            else if (iValue < 0)
+            catch (Exception ex)
             {
-                this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.Green;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.Green;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 12);
-            }
-            else
-            {
-                this.dataGridView1.Rows[e.RowIndex].Cells["currentPrice"].Style.ForeColor = Color.White;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.ForeColor = Color.White;
-                this.dataGridView1.Rows[e.RowIndex].Cells["increase"].Style.Font = new Font("宋体", 9);
+                
             }
         }
 
@@ -1057,7 +1154,13 @@ namespace GPSmallTools
         //定时器
         private void timer1_Tick(object sender, EventArgs e)
         {
-            //Show(111);
+            if (BCanExec)
+            {
+                BCanExec = false;
+                Show(11);
+                //MessageBox.Show("333");
+                BCanExec = true;
+            }
         }
 
         #region 预警相关
@@ -1681,6 +1784,7 @@ namespace GPSmallTools
     //消息提醒类
     public class ErrorMsg
     {
+        public string Code { get; set; }//股票代码
         public int TitleType { get; set; }
         public string Content { get; set; }
         public ToolTipIcon ToolTripType { get; set; }
