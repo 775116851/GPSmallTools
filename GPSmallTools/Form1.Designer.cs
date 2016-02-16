@@ -65,7 +65,6 @@
             this.跌百 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.涨元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.跌元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStripMsg.SuspendLayout();
             this.contextMenuStripGridView.SuspendLayout();
@@ -73,7 +72,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).BeginInit();
             this.groupBoxGJ.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -197,13 +195,13 @@
             this.contextMenuStripMsg.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.退出ToolStripMenuItem});
             this.contextMenuStripMsg.Name = "contextMenuStripMsg";
-            this.contextMenuStripMsg.Size = new System.Drawing.Size(99, 26);
+            this.contextMenuStripMsg.Size = new System.Drawing.Size(101, 26);
             this.contextMenuStripMsg.Text = "退出系统";
             // 
             // 退出ToolStripMenuItem
             // 
             this.退出ToolStripMenuItem.Name = "退出ToolStripMenuItem";
-            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.退出ToolStripMenuItem.Text = "退出";
             this.退出ToolStripMenuItem.Click += new System.EventHandler(this.退出ToolStripMenuItem_Click);
             // 
@@ -213,25 +211,25 @@
             this.置顶ToolStripMenuItem,
             this.删除ToolStripMenuItem});
             this.contextMenuStripGridView.Name = "contextMenuStripGridView";
-            this.contextMenuStripGridView.Size = new System.Drawing.Size(99, 48);
+            this.contextMenuStripGridView.Size = new System.Drawing.Size(101, 48);
             // 
             // 置顶ToolStripMenuItem
             // 
             this.置顶ToolStripMenuItem.Name = "置顶ToolStripMenuItem";
-            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.置顶ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.置顶ToolStripMenuItem.Text = "置顶";
             this.置顶ToolStripMenuItem.Click += new System.EventHandler(this.置顶ToolStripMenuItem_Click);
             // 
             // 删除ToolStripMenuItem
             // 
             this.删除ToolStripMenuItem.Name = "删除ToolStripMenuItem";
-            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.删除ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.删除ToolStripMenuItem.Text = "删除";
             this.删除ToolStripMenuItem.Click += new System.EventHandler(this.删除ToolStripMenuItem_Click);
             // 
             // timer1
             // 
-            this.timer1.Interval = 2000;
+            this.timer1.Interval = 1500;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // groupBoxInfo1
@@ -422,20 +420,11 @@
             this.跌元.Name = "跌元";
             this.跌元.Width = 120;
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Location = new System.Drawing.Point(347, 16);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(240, 135);
-            this.pictureBox1.TabIndex = 20;
-            this.pictureBox1.TabStop = false;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(984, 695);
-            this.Controls.Add(this.pictureBox1);
+            this.ClientSize = new System.Drawing.Size(269, 372);
             this.Controls.Add(this.groupBoxGJ);
             this.Controls.Add(this.groupBoxInfo1);
             this.Controls.Add(this.lblSZZS3);
@@ -467,7 +456,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.trackBarOpacity)).EndInit();
             this.groupBoxGJ.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -510,7 +498,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn 跌百;
         private System.Windows.Forms.DataGridViewTextBoxColumn 涨元;
         private System.Windows.Forms.DataGridViewTextBoxColumn 跌元;
-        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }
 

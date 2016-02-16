@@ -48,14 +48,15 @@ namespace GPSmallTools
         private bool BCanExec = true;
         private void Form1_Load(object sender, EventArgs e)
         {
-            Image pic = Image.FromStream(WebRequest.Create("http://hqgnqhpic.eastmoney.com/EM_Futures2010PictureProducter/Picture/IF16021RS.png?dt=1454222469738").GetResponse().GetResponseStream());
-            pictureBox1.Image = pic;
+            //Image pic = Image.FromStream(WebRequest.Create("http://hqgnqhpic.eastmoney.com/EM_Futures2010PictureProducter/Picture/IF16021RS.png?dt=1454222469738").GetResponse().GetResponseStream());
+            //pictureBox1.Image = pic;
             //log.Info("呵呵");
             BindConfig();
-            //System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
-            //Thread tShow = new Thread(ShowTT);
-            //tShow.IsBackground = true;
-            //tShow.Start();
+            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            Thread tShow = new Thread(ShowTT);
+            tShow.IsBackground = true;
+            tShow.Start();
+
             Show(1);
 
             //GetAPIDataPushGPYJ();
@@ -145,10 +146,11 @@ namespace GPSmallTools
                 if (BSelect)
                 {
                     BSelect = false;
-                    fCount++;
-                    Show(fCount);
+                    //fCount++;
+                    //Show(fCount);
+                    ShowHGT();
                     Thread.Sleep(1500);
-                    log.Info("运行次数：" + fCount);
+                    //log.Info("运行次数：" + fCount);
                     BSelect = true;
                 }
                 //}
@@ -530,7 +532,7 @@ namespace GPSmallTools
 
             try
             {
-                ShowHGT();
+                //ShowHGT();
             }
             catch (Exception ex)
             {
@@ -1682,7 +1684,7 @@ namespace GPSmallTools
                 double DFB = 0.0;
                 if (double.TryParse(sDFB, out DFB) == true)
                 {
-                    if (Increase <= DFB)
+                    if (Increase <= -DFB)
                     {
                         returnMsg = "当前股票:" + stock.name + " 的幅度已跌到预警跌幅:" + DFB + "%";
                         return returnMsg;
