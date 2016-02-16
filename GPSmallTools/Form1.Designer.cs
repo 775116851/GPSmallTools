@@ -65,6 +65,7 @@
             this.跌百 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.涨元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.跌元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cboIsTX = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStripMsg.SuspendLayout();
             this.contextMenuStripGridView.SuspendLayout();
@@ -234,6 +235,7 @@
             // 
             // groupBoxInfo1
             // 
+            this.groupBoxInfo1.Controls.Add(this.cboIsTX);
             this.groupBoxInfo1.Controls.Add(this.btnDownX);
             this.groupBoxInfo1.Controls.Add(this.txtOpacity);
             this.groupBoxInfo1.Controls.Add(this.trackBarOpacity);
@@ -257,6 +259,7 @@
             this.btnDownX.TabIndex = 25;
             this.btnDownX.Text = "︾";
             this.btnDownX.UseVisualStyleBackColor = true;
+            this.btnDownX.Visible = false;
             this.btnDownX.Click += new System.EventHandler(this.btnDownX_Click);
             // 
             // txtOpacity
@@ -420,6 +423,17 @@
             this.跌元.Name = "跌元";
             this.跌元.Width = 120;
             // 
+            // cboIsTX
+            // 
+            this.cboIsTX.AutoSize = true;
+            this.cboIsTX.Location = new System.Drawing.Point(202, 64);
+            this.cboIsTX.Name = "cboIsTX";
+            this.cboIsTX.Size = new System.Drawing.Size(48, 16);
+            this.cboIsTX.TabIndex = 26;
+            this.cboIsTX.Text = "提醒";
+            this.cboIsTX.UseVisualStyleBackColor = true;
+            this.cboIsTX.CheckedChanged += new System.EventHandler(this.cboIsTX_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -498,6 +512,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn 跌百;
         private System.Windows.Forms.DataGridViewTextBoxColumn 涨元;
         private System.Windows.Forms.DataGridViewTextBoxColumn 跌元;
+        private System.Windows.Forms.CheckBox cboIsTX;
     }
 }
 

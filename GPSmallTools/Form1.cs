@@ -21,7 +21,7 @@ namespace GPSmallTools
 {
     public enum ErrorTitleType : int
     {
-        [Description("股价提醒")]
+        [Description("提醒")]
         GJMsg = 0,
         [Description("消息提醒")]
         PTMsg = 1,
@@ -46,6 +46,8 @@ namespace GPSmallTools
         public static Queue<ErrorMsg> queueTXMsgList = new Queue<ErrorMsg>();//禁止股价提醒
         public static object locker = new object();
         private bool BCanExec = true;
+        private bool BIsTX = true;//提醒
+        private string BTXTime = "1";//提醒间隔时间
         private void Form1_Load(object sender, EventArgs e)
         {
             //Image pic = Image.FromStream(WebRequest.Create("http://hqgnqhpic.eastmoney.com/EM_Futures2010PictureProducter/Picture/IF16021RS.png?dt=1454222469738").GetResponse().GetResponseStream());
@@ -118,6 +120,20 @@ namespace GPSmallTools
                 cboTopMost.Checked = true;
                 this.TopMost = true;
             }
+            //是否提醒
+            string sIsTX = Convert.ToString(ConfigurationManager.AppSettings["GPIsTX"]);
+            if (string.IsNullOrEmpty(sIsTX) || sIsTX != "1")
+            {
+                cboIsTX.Checked = false;
+                BIsTX = false;
+            }
+            else
+            {
+                cboIsTX.Checked = true;
+                BIsTX = true;
+            }
+            //提醒间隔时间
+            BTXTime = Convert.ToString(ConfigurationManager.AppSettings["GPTXTime"]);
             //透明度
             string sOpacity = Convert.ToString(ConfigurationManager.AppSettings["GPOpacity"]);
             int mOpacity = 0;
@@ -213,33 +229,44 @@ namespace GPSmallTools
                                 stock.SysNo = Convert.ToString(jStock["code"]).Trim('"');
                                 stock.currentPrice = Convert.ToString(jStock["currentPrice"]);
                                 string mIncrease = Convert.ToString(Math.Round(Convert.ToDouble(jStock["increase"].ToString()), 2, MidpointRounding.AwayFromZero));//涨跌幅
-                                //当前股票已提醒的间隔时间
-                                var mGPYTX = (from t in queueTXMsgList where t.Code == stock.SysNo && t.CreateTime >= DateTime.Now.AddMinutes(-1) select t).ToList();
-                                if(mGPYTX.Count <= 0)
+                                if (BIsTX == true)
                                 {
-                                    if (listGPYJ != null && listGPYJ.Count > 0)
+                                    int txT = 1;
+                                    if (string.IsNullOrEmpty(BTXTime) || int.TryParse(BTXTime, out txT) == false)
                                     {
-                                        var mGP = (from t in listGPYJ where t.SysNo == stock.SysNo && t.ISYJ == 1 select t).ToList();
-                                        if (mGP.Count > 0)
+                                        txT = 1;
+                                    }
+                                    else
+                                    {
+                                        txT = Convert.ToInt32(BTXTime);
+                                    }
+                                    //当前股票已提醒的间隔时间
+                                    var mGPYTX = (from t in queueTXMsgList where t.Code == stock.SysNo && t.CreateTime >= DateTime.Now.AddMinutes(-txT) select t).ToList();
+                                    if (mGPYTX.Count <= 0)
+                                    {
+                                        if (listGPYJ != null && listGPYJ.Count > 0)
                                         {
-                                            string returnMsg = PriceYJ(stock.currentPrice, mIncrease, mGP[0]);
-                                            if (!string.IsNullOrEmpty(returnMsg))
+                                            var mGP = (from t in listGPYJ where t.SysNo == stock.SysNo && t.ISYJ == 1 select t).ToList();
+                                            if (mGP.Count > 0)
                                             {
-                                                ErrorMsg eMsg = new ErrorMsg();
-                                                eMsg.Code = stock.SysNo;
-                                                eMsg.TitleType = (int)ErrorTitleType.GJMsg;
-                                                eMsg.Content = returnMsg;
-                                                eMsg.CreateTime = DateTime.Now;
-                                                eMsg.ShowTime = 5000;
-                                                eMsg.ToolTripType = ToolTipIcon.Warning;
-                                                queueMsgList.Enqueue(eMsg);
-                                                queueTXMsgList.Enqueue(eMsg);
-                                                //this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
+                                                string returnMsg = PriceYJ(stock.currentPrice, mIncrease, mGP[0]);
+                                                if (!string.IsNullOrEmpty(returnMsg))
+                                                {
+                                                    ErrorMsg eMsg = new ErrorMsg();
+                                                    eMsg.Code = stock.SysNo;
+                                                    eMsg.TitleType = (int)ErrorTitleType.GJMsg;
+                                                    eMsg.Content = returnMsg;
+                                                    eMsg.CreateTime = DateTime.Now;
+                                                    eMsg.ShowTime = 5000;
+                                                    eMsg.ToolTripType = ToolTipIcon.Warning;
+                                                    queueMsgList.Enqueue(eMsg);
+                                                    queueTXMsgList.Enqueue(eMsg);
+                                                    //this.notifyIconMsg.ShowBalloonTip(5000, "消息提醒", returnMsg, ToolTipIcon.Warning);
+                                                }
                                             }
                                         }
                                     }
                                 }
-
                                 
                                 stock.name = Convert.ToString(jStock["name"]).Trim('"');
                                 stock.code = Convert.ToString(jStock["code"]).Trim('"').Substring(2);
@@ -1650,7 +1677,7 @@ namespace GPSmallTools
                 {
                     if (CurrentPrice >= ZFY)
                     {
-                        returnMsg = "当前股票:" + stock.name + " 的价格已涨到预警价:" + ZFY + "元";
+                        returnMsg = "当前股票:" + stock.name + " 的价格已涨到预警价:" + ZFY + "元;当前价格：" + sZFY + "元";
                         return returnMsg;
                     }
                 }
@@ -1662,7 +1689,7 @@ namespace GPSmallTools
                 {
                     if (CurrentPrice <= DFY)
                     {
-                        returnMsg = "当前股票:" + stock.name + " 的价格已跌到预警价:" + DFY + "元";
+                        returnMsg = "当前股票:" + stock.name + " 的价格已跌到预警价:" + DFY + "元;当前价格：" + sDFY + "元";
                         return returnMsg;
                     }
                 }
@@ -1674,7 +1701,7 @@ namespace GPSmallTools
                 {
                     if (Increase >= ZFB)
                     {
-                        returnMsg = "当前股票:" + stock.name + " 的幅度已涨到预警涨幅:" + ZFB + "%";
+                        returnMsg = "当前股票:" + stock.name + " 的幅度已涨到预警涨幅:" + ZFB + "%;当前涨幅：" + Increase + "%";
                         return returnMsg;
                     }
                 }
@@ -1686,7 +1713,7 @@ namespace GPSmallTools
                 {
                     if (Increase <= -DFB)
                     {
-                        returnMsg = "当前股票:" + stock.name + " 的幅度已跌到预警跌幅:" + DFB + "%";
+                        returnMsg = "当前股票:" + stock.name + " 的幅度已跌到预警跌幅:" + DFB + "%;当前跌幅：" + sDFY +　"%";
                         return returnMsg;
                     }
                 }
@@ -1694,7 +1721,22 @@ namespace GPSmallTools
             return returnMsg;
         }
         #endregion
-        
+
+        //提醒
+        private void cboIsTX_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cboIsTX.Checked == true)
+            {
+                UpdateAppConfig("GPIsTX", "1");
+                BIsTX = true;
+            }
+            else
+            {
+                UpdateAppConfig("GPIsTX", "0");
+                BIsTX = false;
+                queueMsgList.Clear();
+            }
+        }
     }
 
     //股票类
