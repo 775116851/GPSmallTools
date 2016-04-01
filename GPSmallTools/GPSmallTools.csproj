@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlAgilityPack, Version=1.4.6.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>3rdParty\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>3rdParty\log4net.dll</HintPath>
@@ -123,6 +127,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="3rdParty\HtmlAgilityPack.dll" />
     <Content Include="3rdParty\LitJSON.dll" />
     <Content Include="3rdParty\log4net.dll" />
     <Content Include="3rdParty\Newtonsoft.Json.Net20.dll" />

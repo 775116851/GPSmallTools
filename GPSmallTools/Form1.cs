@@ -16,6 +16,7 @@ using System.Configuration;
 using System.Threading;
 using System.Xml;
 using System.Web.Caching;
+using System.Runtime.InteropServices;
 
 namespace GPSmallTools
 {
@@ -50,6 +51,9 @@ namespace GPSmallTools
         private string BTXTime = "1";//提醒间隔时间
         private void Form1_Load(object sender, EventArgs e)
         {
+
+            SetPenetrate();//鼠标穿透
+            this.TransparencyKey = this.BackColor;
             //Image pic = Image.FromStream(WebRequest.Create("http://hqgnqhpic.eastmoney.com/EM_Futures2010PictureProducter/Picture/IF16021RS.png?dt=1454222469738").GetResponse().GetResponseStream());
             //pictureBox1.Image = pic;
             //log.Info("呵呵");
@@ -66,6 +70,8 @@ namespace GPSmallTools
             //消息队列
             Thread tMsg = new Thread(OutMsg);
             tMsg.Start();
+
+            
         }
 
         //消息提醒
@@ -1042,6 +1048,8 @@ namespace GPSmallTools
 
             HotKey.RegisterHotKey(Handle, 103, HotKey.KeyModifiers.Alt, Keys.C);//临时提高透明度
             HotKey.RegisterHotKey(Handle, 104, HotKey.KeyModifiers.Alt, Keys.V);//临时减低透明度
+
+            HotKey.RegisterHotKey(Handle, 105, HotKey.KeyModifiers.Alt, Keys.X);//取消鼠标穿透窗体
         }
 
         //在Form的Leave事件中注销热键。
@@ -1056,6 +1064,8 @@ namespace GPSmallTools
 
             HotKey.UnregisterHotKey(Handle, 103);
             HotKey.UnregisterHotKey(Handle, 104);
+
+            HotKey.UnregisterHotKey(Handle, 105);
         }
 
         /// <summary>
@@ -1101,12 +1111,47 @@ namespace GPSmallTools
                                 this.Opacity = this.Opacity - 0.1;
                             }
                             break;
+                        case 105://取消鼠标穿透窗体
+                            if (this.FormBorderStyle == FormBorderStyle.None)
+                            {
+                                SetPenetrate();
+                            }
+                            else
+                            {
+                                this.FormBorderStyle = FormBorderStyle.None;
+                            }
+                            break;
                     }
                     break;
             }
             base.WndProc(ref m);
         }
 
+        #endregion
+
+        #region 鼠标穿透窗体
+        private const uint WS_EX_LAYERED = 0x80000;
+        private const int WS_EX_TRANSPARENT = 0x20;
+        private const int GWL_STYLE = (-16);
+        private const int GWL_EXSTYLE = (-20);
+        private const int LWA_ALPHA = 0;
+        [DllImport("user32", EntryPoint = "SetWindowLong")]
+        private static extern uint SetWindowLong(IntPtr hwnd, int nIndex, uint dwNewLong);
+        [DllImport("user32", EntryPoint = "GetWindowLong")]
+        private static extern uint GetWindowLong(IntPtr hwnd, int nIndex);
+        [DllImport("user32", EntryPoint = "SetLayeredWindowAttributes")]
+        private static extern int SetLayeredWindowAttributes(IntPtr hwnd, int crKey, int bAlpha, int dwFlags);
+
+        ///         
+        /// 设置窗体具有鼠标穿透效果        
+        ///          
+        public void SetPenetrate()
+        {
+            this.TopMost = true;
+            GetWindowLong(this.Handle, GWL_EXSTYLE);
+            SetWindowLong(this.Handle, GWL_EXSTYLE, WS_EX_TRANSPARENT | WS_EX_LAYERED);
+            SetLayeredWindowAttributes(this.Handle, 0, 100, LWA_ALPHA);
+        } 
         #endregion
 
         #region 错误码相关
@@ -1737,6 +1782,7 @@ namespace GPSmallTools
                 queueMsgList.Clear();
             }
         }
+
     }
 
     //股票类

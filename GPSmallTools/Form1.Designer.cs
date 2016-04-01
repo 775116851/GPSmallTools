@@ -48,6 +48,7 @@
             this.删除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.groupBoxInfo1 = new System.Windows.Forms.GroupBox();
+            this.cboIsTX = new System.Windows.Forms.CheckBox();
             this.btnDownX = new System.Windows.Forms.Button();
             this.txtOpacity = new System.Windows.Forms.TextBox();
             this.trackBarOpacity = new System.Windows.Forms.TrackBar();
@@ -65,7 +66,6 @@
             this.跌百 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.涨元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.跌元 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.cboIsTX = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStripMsg.SuspendLayout();
             this.contextMenuStripGridView.SuspendLayout();
@@ -80,6 +80,7 @@
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
+            this.dataGridView1.BackgroundColor = System.Drawing.Color.White;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Location = new System.Drawing.Point(6, 71);
             this.dataGridView1.Name = "dataGridView1";
@@ -250,6 +251,17 @@
             this.groupBoxInfo1.TabIndex = 18;
             this.groupBoxInfo1.TabStop = false;
             this.groupBoxInfo1.Text = "基础设置";
+            // 
+            // cboIsTX
+            // 
+            this.cboIsTX.AutoSize = true;
+            this.cboIsTX.Location = new System.Drawing.Point(202, 64);
+            this.cboIsTX.Name = "cboIsTX";
+            this.cboIsTX.Size = new System.Drawing.Size(48, 16);
+            this.cboIsTX.TabIndex = 26;
+            this.cboIsTX.Text = "提醒";
+            this.cboIsTX.UseVisualStyleBackColor = true;
+            this.cboIsTX.CheckedChanged += new System.EventHandler(this.cboIsTX_CheckedChanged);
             // 
             // btnDownX
             // 
@@ -422,17 +434,6 @@
             this.跌元.HeaderText = "跌元";
             this.跌元.Name = "跌元";
             this.跌元.Width = 120;
-            // 
-            // cboIsTX
-            // 
-            this.cboIsTX.AutoSize = true;
-            this.cboIsTX.Location = new System.Drawing.Point(202, 64);
-            this.cboIsTX.Name = "cboIsTX";
-            this.cboIsTX.Size = new System.Drawing.Size(48, 16);
-            this.cboIsTX.TabIndex = 26;
-            this.cboIsTX.Text = "提醒";
-            this.cboIsTX.UseVisualStyleBackColor = true;
-            this.cboIsTX.CheckedChanged += new System.EventHandler(this.cboIsTX_CheckedChanged);
             // 
             // Form1
             // 

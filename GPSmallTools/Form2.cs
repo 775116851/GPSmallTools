@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using HtmlAgilityPack;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -335,7 +336,69 @@ Brushes.Blue, 250, 272);
             else     
                 newcolor = Color.Goldenrod; 
             return newcolor;  
-        }    
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            //ServicePointManager.DefaultConnectionLimit = 50;
+            //WebClient wc = new WebClient();
+            string sUrl = "http://www.haha365.com/joke/index_{0}.htm";
+            string mUrl = "";
+            //for (int i = 1; i < 100000;i++ )
+            //{
+            //    mUrl = string.Format(sUrl, i);
+            //    HttpWebRequest myRequest = (HttpWebRequest)WebRequest.Create(mUrl);
+            //    myRequest.Method = "HEAD";　              //设置提交方式可以为＂get＂，＂head＂等
+            //    myRequest.Timeout = 10000;　             //设置网页响应时间长度
+            //    myRequest.AllowAutoRedirect = false;//是否允许自动重定向
+            //    HttpWebResponse myResponse = (HttpWebResponse)myRequest.GetResponse();
+            //    if (myResponse.StatusCode == HttpStatusCode.OK)//返回响应的状态
+            //    {
+            //        WebClient wc = new WebClient();
+            //        wc.DownloadFile(mUrl, @"C:\中文幽默笑话\" + System.IO.Path.GetFileName(mUrl));
+            //        System.Net.Cache.RequestCachePolicy policy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+            //        wc.CachePolicy = policy;
+            //        wc.Dispose();
+            //    }
+            //}
+            FileStream fsMode = null;
+            for (int i = 1; i < 100000; i++)
+            {
+                mUrl = string.Format(sUrl, i);
+                //string mContent = ShowWebRequest(mUrl);
+                HtmlWeb htmlWeb = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument htmlDoc = htmlWeb.Load(mUrl);
+                HtmlNode htmlNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='r_c']");
+                string mContent = htmlNode.InnerText;
+                if(string.IsNullOrEmpty(mContent) || !mContent.Contains("class=\"cat_llb\""))
+                {
+                    MessageBox.Show("完成：" + i);
+                    return;
+                }
+                try
+                {
+                    byte[] fMode = Encoding.UTF8.GetBytes(mContent);
+                    fsMode = new FileStream(@"C:\中文幽默笑话\" + System.IO.Path.GetFileName(mUrl), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    fsMode.Write(fMode, 0, fMode.Length);
+                    fsMode.Close();
+                    fsMode.Dispose();
+                }
+                catch (Exception)
+                {
+                }
+                finally
+                {
+                    if (fsMode != null)
+                    {
+                        fsMode.Dispose();
+                    }
+                }
+            }
+
+            MessageBox.Show("完成：OK");
+        }  
+  
+        
     }
 
     public class HGT
